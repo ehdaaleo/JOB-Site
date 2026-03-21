@@ -5,6 +5,11 @@ defineProps({
   errors: Object
 })
 const emit = defineEmits(['update:modelValue'])
+const workTypes = [
+  { label: 'Remote', value: 'remote' },
+  { label: 'On-site', value: 'on-site' },
+  { label: 'Hybrid', value: 'hybrid' },
+]
 </script>
 
 <template>
@@ -36,10 +41,7 @@ const emit = defineEmits(['update:modelValue'])
         <div class="relative">
           <select v-model="modelValue.work_type" class="appearance-none w-full bg-slate-50 border border-slate-200 rounded-lg text-slate-900 text-[16px] pl-[14px] pr-[30px] py-[10px] outline-none cursor-pointer transition-all duration-200 focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/15 focus:bg-white" :class="{ 'border-red-400 focus:border-red-500 focus:ring-red-500/15': errors.work_type }">
             <option value="">Select type</option>
-            <option value="Full-Time">Full-Time</option>
-            <option value="Part-Time">Part-Time</option>
-            <option value="Freelance">Freelance</option>
-            <option value="Contract">Contract</option>
+            <option v-for="wt in workTypes" :key="wt.value" :value="wt.value">{{ wt.label }}</option>
           </select>
           <span class="absolute right-[12px] top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-[12px]">▾</span>
         </div>

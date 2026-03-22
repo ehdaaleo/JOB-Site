@@ -132,6 +132,10 @@ const validateStep = (step) => {
   return isValid
 }
 
+import { useJobStore } from '@/stores/jobStore'
+
+const jobStore = useJobStore()
+
 const handleNext = () => {
   if (validateStep(currentStep.value)) {
     if (currentStep.value < steps.value.length - 1) {
@@ -158,11 +162,17 @@ const submitted = ref(false)
 const submitJob = () => {
   if (!validateStep(currentStep.value)) return;
   submitting.value = true
+  
+  // Actually store the job data
   setTimeout(() => {
+    jobStore.addJob(form.value)
+    
     submitting.value = false
     submitted.value = true
     setTimeout(() => {
       submitted.value = false
+      //will redirect to home page after 3 seconds
+      router.push('/')
     }, 3000)
   }, 1500)
 }

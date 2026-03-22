@@ -1,0 +1,19 @@
+
+<script setup>
+defineProps({
+  responsibilities: { type: Array, required: true }
+});
+</script>
+
+<template>
+  <div class="bg-white border border-slate-200 rounded-3xl p-8 scroll-mt-24 shadow-sm hover:shadow-md transition-shadow duration-300">
+    <div class="font-['Syne'] text-[20px] font-extrabold text-slate-900 mb-6 flex items-center gap-3">
+      Responsibilities
+    </div>
+    <ul class="flex flex-col gap-3.5">
+      <li v-for="(item, i) in responsibilities" :key="i" class="flex items-start gap-3 text-[15px] text-slate-600 leading-relaxed group">
+        {{ item }}
+      </li>
+    </ul>
+  </div>
+</template>

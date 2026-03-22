@@ -6,7 +6,7 @@ defineProps({
 
 <template>
   <div class="flex items-center justify-between px-7 py-4 bg-white border-b border-slate-200 shrink-0">
-    <div class="font-extrabold text-blue-600 flex items-center gap-2.5 text-[21px]">
+    <div class="font-bold text-blue-600 flex items-center gap-2.5 text-[21px]">
       <div class="flex items-center justify-center w-[32px] h-[32px] bg-blue-50 text-blue-600 rounded-[10px] shrink-0">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>

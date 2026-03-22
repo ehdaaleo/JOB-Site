@@ -25,7 +25,7 @@ defineProps({
             class="w-[46px] h-[46px] rounded-[10px] object-cover border border-slate-200 p-0.5 shrink-0 bg-white" 
             alt="Logo"
           />
-          <div v-else class="w-[46px] h-[46px] rounded-[10px] bg-blue-50 border border-blue-100 text-blue-600 font-extrabold text-[18px] flex items-center justify-center shrink-0">
+          <div v-else class="w-[46px] h-[46px] rounded-[10px] bg-blue-50 border border-blue-100 text-blue-600 font-bold text-[18px] flex items-center justify-center shrink-0">
             {{ employer.initials }}
           </div>
           <div class="overflow-hidden">
@@ -45,7 +45,7 @@ defineProps({
 
         <div class="flex items-center gap-[4px] text-[14px] text-slate-500 font-medium mb-[10px] truncate"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>{{ form.location || 'Location' }}</div>
         
-        <div class="text-[15px] font-extrabold text-green-600 truncate">
+        <div class="text-[15px] font-bold text-green-600 truncate">
           <span v-if="form.salary_min || form.salary_max">
             ${{ form.salary_min ? form.salary_min.toLocaleString() : '?' }}
             –
@@ -92,7 +92,7 @@ defineProps({
               'text-blue-600 font-bold': currentStep === i
             }"
           >{{ step.label }}</span>
-          <span v-if="currentStep > i" class="ml-auto text-[14px] text-green-600 font-extrabold">✓</span>
+          <span v-if="currentStep > i" class="ml-auto text-[14px] text-green-600 font-bold">✓</span>
         </div>
       </div>
     </div>

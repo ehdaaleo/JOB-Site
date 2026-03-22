@@ -33,7 +33,7 @@ const toggleQuickTech = (t) => {
 
 <template>
   <div>
-    <h2 class="text-[24px] font-extrabold text-slate-900 mb-1 leading-tight">Compensation & Skills</h2>
+    <h2 class="text-[24px] font-bold text-slate-900 mb-1 leading-tight">Compensation & Skills</h2>
     <p class="text-[16px] text-slate-400 mb-[26px] leading-relaxed">Set the salary range and required technologies for this role.</p>
     
     <div class="grid grid-cols-1 md:grid-cols-2 gap-[16px]">

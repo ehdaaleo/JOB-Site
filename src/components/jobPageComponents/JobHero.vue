@@ -12,7 +12,7 @@ defineEmits(['apply', 'save']);
 <template>
   <div class="flex flex-col md:flex-row items-start gap-6 lg:gap-10">
     <!-- Company logo -->
-    <div class="lg:w-24 lg:h-24 md:w-20 md:h-20 w-16 h-16 rounded-[1.5rem] bg-indigo-50/50 border border-indigo-100 flex items-center justify-center shrink-0 overflow-hidden font-['Syne'] text-3xl font-extrabold text-blue-600 shadow-sm transition-transform hover:scale-105 duration-300">
+    <div class="lg:w-24 lg:h-24 md:w-20 md:h-20 w-16 h-16 rounded-[1.5rem] bg-indigo-50/50 border border-indigo-100 flex items-center justify-center shrink-0 overflow-hidden font-['Syne'] text-3xl font-bold text-blue-600 shadow-sm transition-transform hover:scale-105 duration-300">
       <img v-if="job.company_logo" :src="job.company_logo" :alt="job.company_name" class="w-full h-full object-cover" />
       <span v-else>{{ job.company_name?.[0] }}</span>
     </div>
@@ -20,7 +20,7 @@ defineEmits(['apply', 'save']);
     <!-- Job info -->
     <div class="flex-1">
       <div class="flex flex-wrap items-center gap-3 mb-2">
-        <h1 class="font-['Syne'] text-2xl md:text-3xl lg:text-4xl font-extrabold text-slate-900 leading-tight">
+        <h1 class="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-900 leading-tight">
           {{ job.title }}
         </h1>
         <span v-if="job.company_verified" class="inline-flex bg-green-50 border border-green-200 text-green-600 text-[12px] tracking-widest font-bold px-3 py-1.5 rounded-full items-center gap-1.5 shadow-sm h-fit">

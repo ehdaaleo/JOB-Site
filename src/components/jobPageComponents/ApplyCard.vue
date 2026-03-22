@@ -12,14 +12,14 @@ defineEmits(['apply', 'save']);
 <template>
   <div class="bg-white border border-slate-200 rounded-3xl p-5 py-5 text-center flex flex-col items-center gap-3 shadow-sm hover:shadow-md transition-shadow duration-300">
     <!-- Deadline Tag -->
-    <div v-if="job.application_deadline" class="bg-blue-50/50 border border-blue-100 text-blue-600 text-[11px] uppercase tracking-[1.2px] px-3 py-1.5 rounded-full flex items-center gap-2 inline-flex font-extrabold shadow-sm">
+    <div v-if="job.application_deadline" class="bg-blue-50/50 border border-blue-100 text-blue-600 text-[11px] uppercase tracking-[1.2px] px-3 py-1.5 rounded-full flex items-center gap-2 inline-flex font-bold shadow-sm">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
       Closes {{ job.application_deadline }}
     </div>
     
     <!-- Title & Desc -->
     <div class="space-y-1">
-      <div class="text-[17px] font-extrabold text-slate-900 tracking-tight">Ready to apply?</div>
+      <div class="text-[17px] font-bold text-slate-900 tracking-tight">Ready to apply?</div>
       <div class="text-[14px] text-slate-500 font-medium leading-[1.5] px-2">
         {{ isCandidate ? 'Submit your application in just a few steps.' : 'Create a candidate account to apply.' }}
       </div>
@@ -43,7 +43,7 @@ defineEmits(['apply', 'save']);
     <!-- Action Buttons -->
     <div class="w-full flex flex-col gap-4">
       <button
-        class="w-full text-[15px] font-extrabold py-4 px-6 rounded-2xl shadow-md transition-all duration-300 flex items-center justify-center gap-2.5 group bg-blue-600 text-white hover:bg-blue-700 hover:shadow-blue-200 hover:shadow-lg"
+        class="w-full text-[15px] font-bold py-4 px-6 rounded-2xl shadow-md transition-all duration-300 flex items-center justify-center gap-2.5 group bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:opacity-90 hover:shadow-blue-200 hover:shadow-lg"
         @click="$emit('apply')"
       >
         {{ isCandidate ? 'Apply for this position' : 'Login to Apply' }}

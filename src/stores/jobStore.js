@@ -1,9 +1,9 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 export const useJobStore = defineStore('jobs', () => {
-  // All jobs in the system
-  const jobs = ref([
+  // Mock Data (Initial state)
+  const initialData = [
     {
       id: 1,
       title: 'Senior Frontend Developer',
@@ -142,7 +142,15 @@ export const useJobStore = defineStore('jobs', () => {
       status: 'pending',
       applicationsCount: 0
     }
-  ])
+  ]
+
+  // Initialize from LocalStorage or use Mock Data
+  const jobs = ref(JSON.parse(localStorage.getItem('jobs')) || initialData)
+
+  // Watch for changes and save to LocalStorage
+  watch(jobs, (newJobs) => {
+    localStorage.setItem('jobs', JSON.stringify(newJobs))
+  }, { deep: true })
 
   // Getters
   const activeJobs = computed(() => jobs.value.filter(job => job.status === 'active'))

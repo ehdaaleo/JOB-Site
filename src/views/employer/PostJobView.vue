@@ -1,249 +1,281 @@
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { useJobStore } from '../../stores/jobStore'
+import { ref, watch } from 'vue'
+import JobPostTopBar from '@/components/jobPostComponents/PostTopBar.vue'
+import JobPostProgress from '@/components/jobPostComponents/PostProgress.vue'
+import JobPostBasics from '@/components/jobPostComponents/PostBasics.vue'
+import JobPostDetails from '@/components/jobPostComponents/PostDetails.vue'
+import JobPostSkills from '@/components/jobPostComponents/PostSkills.vue'
+import JobPostReview from '@/components/jobPostComponents/PostReview.vue'
+import JobPostLivePreview from '@/components/jobPostComponents/PostLivePreview.vue'
+import JobPostFooter from '@/components/jobPostComponents/PostFooter.vue'
+import Navbar from '@/components/homePageComponents/navbar.vue'
+import Footer from '@/components/homePageComponents/footer.vue'
 
-const router = useRouter()
-const jobStore = useJobStore()
+const currentStep = ref(0)
+const steps = ref([
+  { label: 'Basics' },
+  { label: 'Details' },
+  { label: 'Skills' },
+  { label: 'Review' }
+])
 
-const jobForm = ref({
-  title: '',
-  company: { id: 1, name: 'TechCorp Inc.', location: 'San Francisco, CA', industry: 'Technology' },
-  location: '',
-  workType: 'remote',
-  salaryMin: '',
-  salaryMax: '',
-  salaryPeriod: 'yearly',
-  description: '',
-  requirements: '',
-  responsibilities: '',
-  category: 'programming',
-  type: 'full-time',
-  experienceLevel: 'mid',
-  skills: []
+const employer = ref({
+  logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSEgKtZiO3hayBevddOML4GOzKQYi-qX24gPg&s',
+  name: 'ITI',
+  email: 'iti_menya@iti.com',
+  location: 'Menya, Egypt',
+  verified: true
 })
 
-const skillInput = ref('')
-const currentStep = ref(1)
-const isSubmitting = ref(false)
+const categories = ref([
+  { id: 1, name: 'Software Development' },
+  { id: 2, name: 'Design & Creative' },
+  { id: 3, name: 'Marketing & SEO' },
+  { id: 4, name: 'Sales & Communication' },
+  { id: 5, name: 'Finance & Accounting' },
+  { id: 6, name: 'HR & Recruiting' },
+  { id: 7, name: 'Customer Support' },
+  { id: 8, name: 'Other' }
+])
 
-const addSkill = () => {
-  if (skillInput.value.trim() && !jobForm.value.skills.includes(skillInput.value.trim())) {
-    jobForm.value.skills.push(skillInput.value.trim())
-    skillInput.value = ''
+const form = ref({
+  title: '',
+  category_id: '',
+  work_type: '',
+  location: '',
+  application_deadline: '',
+  experience_level: '',
+  description: '',
+  responsibilities: [''],
+  requirements: [''],
+  benefits: [''],
+  salary_min: null,
+  salary_max: null,
+  technologies: []
+})
+
+const getCategoryName = (id) => {
+  const cat = categories.value.find(c => c.id === id)
+  return cat ? cat.name : 'Unknown'
+}
+
+const errors = ref({})
+
+//handle appearing errors when user type in the form
+watch(form, (newVal) => {
+  // If there are no errors, nothing to clear
+  if (Object.keys(errors.value).length === 0) return
+
+  const updatedErrors = { ...errors.value }
+  let hasChanges = false
+
+  Object.keys(updatedErrors).forEach(key => {
+    let shouldClear = false
+    
+    if (key === 'responsibilities' || key === 'requirements') {
+      if (newVal[key].some(item => item && item.trim() !== '')) {
+        shouldClear = true
+      }
+    } else if (key === 'salary_max') {
+      if (newVal.salary_max && (!newVal.salary_min || newVal.salary_max >= newVal.salary_min)) {
+        shouldClear = true
+      }
+    } else if (key === 'salary_min') {
+      if (newVal.salary_min) {
+        shouldClear = true
+      }
+    } else if (key === 'technologies') {
+      if (newVal.technologies.length > 0) {
+        shouldClear = true
+      }
+    } else {
+      const val = newVal[key]
+      if (val !== undefined && val !== null && (typeof val !== 'string' || val.trim() !== '')) {
+        shouldClear = true
+      }
+    }
+
+    if (shouldClear) {
+      delete updatedErrors[key]
+      hasChanges = true
+    }
+  })
+
+  if (hasChanges) {
+    errors.value = updatedErrors
+  }
+}, { deep: true })
+
+const validateStep = (step) => {
+  errors.value = {}
+  let isValid = true
+
+  if (step === 0) {
+    if (!form.value.title?.trim()) { errors.value.title = 'Job title is required'; isValid = false }
+    if (!form.value.category_id) { errors.value.category_id = 'Category is required'; isValid = false }
+    if (!form.value.work_type) { errors.value.work_type = 'Work type is required'; isValid = false }
+    if (!form.value.location?.trim()) { errors.value.location = 'Location is required'; isValid = false }
+  } else if (step === 1) {
+    if (!form.value.description?.trim()) { errors.value.description = 'Description is required'; isValid = false }
+    
+    const validResps = form.value.responsibilities.filter(r => r.trim() !== '')
+    if (validResps.length === 0) { errors.value.responsibilities = 'At least one responsibility is required'; isValid = false }
+    
+    const validReqs = form.value.requirements.filter(r => r.trim() !== '')
+    if (validReqs.length === 0) { errors.value.requirements = 'At least one requirement is required'; isValid = false }
+  } else if (step === 2) {
+    if (!form.value.salary_min) { errors.value.salary_min = 'Min salary is required'; isValid = false }
+    if (!form.value.salary_max) { errors.value.salary_max = 'Max salary is required'; isValid = false }
+    else if (form.value.salary_min > form.value.salary_max) { errors.value.salary_max = 'Max salary must be greater than min salary'; isValid = false }
+    
+    if (form.value.technologies.length === 0) { errors.value.technologies = 'At least one technology is required'; isValid = false }
+  }
+
+  return isValid
+}
+
+import { useJobStore } from '@/stores/jobStore'
+
+const jobStore = useJobStore()
+
+const handleNext = () => {
+  if (validateStep(currentStep.value)) {
+    if (currentStep.value < steps.value.length - 1) {
+      currentStep.value++
+    }
   }
 }
 
-const removeSkill = (skill) => {
-  jobForm.value.skills = jobForm.value.skills.filter(s => s !== skill)
+const handleBack = () => {
+  if (currentStep.value > 0) {
+    currentStep.value--
+  }
 }
 
-const nextStep = () => {
-  if (currentStep.value < 3) currentStep.value++
+const handleStepClick = (index) => {
+  if (index < currentStep.value) {
+    currentStep.value = index
+  }
 }
 
-const prevStep = () => {
-  if (currentStep.value > 1) currentStep.value--
-}
+const submitting = ref(false)
+const submitted = ref(false)
 
 const submitJob = () => {
-  isSubmitting.value = true
+  if (!validateStep(currentStep.value)) return;
+  submitting.value = true
   
-  const newJob = {
-    ...jobForm.value,
-    salaryMin: parseInt(jobForm.value.salaryMin) * 1000,
-    salaryMax: parseInt(jobForm.value.salaryMax) * 1000,
-  }
-  
-  jobStore.addJob(newJob)
-  
+  // Actually store the job data
   setTimeout(() => {
-    isSubmitting.value = false
-    alert('Job posted successfully! It will appear on the admin dashboard for approval.')
-    router.push('/employer/jobs')
-  }, 1000)
+    // Map work_type to descriptive labels
+    const workTypeMap = {
+      'remote': 'Remote',
+      'on-site': 'On-site',
+      'hybrid': 'Hybrid'
+    }
+
+    // Capitalize location
+    const formattedLocation = form.value.location 
+      ? form.value.location.split(',').map(part => part.trim().charAt(0).toUpperCase() + part.trim().slice(1)).join(', ')
+      : '';
+
+    // Map experience level to descriptive labels with years
+    const experienceMap = {
+      'Entry': 'Entry (0-2 years)',
+      'Mid': 'Mid (2-5 years)',
+      'Senior': 'Senior (5+ years)',
+      'Lead': 'Lead (8+ years)'
+    }
+
+    jobStore.addJob({
+      ...form.value,
+      company_name: employer.value.name,
+      company_logo: employer.value.logo,
+      company_verified: employer.value.verified,
+      category: getCategoryName(form.value.category_id),
+      work_type: workTypeMap[form.value.work_type] || form.value.work_type,
+      location: formattedLocation,
+      experience_level: experienceMap[form.value.experience_level] || form.value.experience_level
+    })
+    
+    submitting.value = false
+    submitted.value = true
+    setTimeout(() => {
+      submitted.value = false
+      //will redirect to home page after 3 seconds
+      router.push('/')
+    }, 3000)
+  }, 1500)
 }
 </script>
 
 <template>
-  <div class="post-job-view">
-    <!-- Header -->
-    <div class="bg-white border-b border-gray-200 px-6 py-4">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900">Post a Job</h1>
-        <p class="text-sm text-gray-500">Create a new job listing</p>
+  <div class="min-h-screen bg-slate-100 flex flex-col">
+    <Navbar />
+    
+    <div class="pt-16 pb-12 flex-1 flex flex-col mt-2">
+      <div class="pj-wrap flex flex-col text-slate-900 overflow-hidden flex-1 shadow-xl mx-4 md:mx-10 rounded-[2rem] border border-slate-200">
+        <!-- Topbar Component -->
+        <JobPostTopBar :employer="employer" />
+        
+        <!-- Progress Tabs Component -->
+        <JobPostProgress :currentStep="currentStep" :steps="steps" @updateStep="handleStepClick" />
+        
+        <!-- Split Layout Area -->
+        <div class="flex flex-1 overflow-hidden h-full">
+          <!-- Form Side -->
+          <div class="flex-1 p-[28px] md:p-[32px] overflow-y-auto bg-white border-r border-slate-200 hide-scrollbar scroll-smooth form-side">
+            <transition name="slide-fade" mode="out-in">
+              <JobPostBasics v-if="currentStep === 0" v-model="form" :categories="categories" :errors="errors" />
+              <JobPostDetails v-else-if="currentStep === 1" v-model="form" :errors="errors" />
+              <JobPostSkills v-else-if="currentStep === 2" v-model="form" :errors="errors" />
+              <JobPostReview v-else-if="currentStep === 3" v-model="form" :employer="employer" :getCategoryName="getCategoryName" />
+            </transition>
+          </div>
+  
+          <!-- Live Preview -->
+          <JobPostLivePreview 
+            class="hidden md:flex"
+            :form="form" 
+            :employer="employer" 
+            :steps="steps" 
+            :currentStep="currentStep" 
+            :getCategoryName="getCategoryName" 
+          />
+        </div>
+  
+        <!-- Footer Component -->
+        <JobPostFooter 
+          :currentStep="currentStep" 
+          :steps="steps" 
+          :submitting="submitting"
+          @next="handleNext"
+          @back="handleBack"
+          @submit="submitJob"
+        />
       </div>
     </div>
 
-    <div class="p-6">
-      <!-- Progress Steps -->
-      <div class="flex items-center justify-center mb-8">
-        <div class="flex items-center">
-          <div :class="`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${currentStep >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'}`">1</div>
-          <div :class="`w-20 h-1 ${currentStep >= 2 ? 'bg-blue-600' : 'bg-gray-200'}`"></div>
-          <div :class="`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${currentStep >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'}`">2</div>
-          <div :class="`w-20 h-1 ${currentStep >= 3 ? 'bg-blue-600' : 'bg-gray-200'}`"></div>
-          <div :class="`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${currentStep >= 3 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'}`">3</div>
-        </div>
+    <!-- Toast Component -->
+    <transition name="toast">
+      <div v-if="submitted" class="fixed bottom-[20px] right-[20px] bg-green-50 border border-green-200 text-green-800 px-[18px] py-[11px] rounded-[10px] text-[13px] font-medium z-[999] shadow-[0_4px_20px_rgba(0,0,0,0.1)] flex items-center gap-[6px]">
+        ✓ Job posted! Pending admin approval.
       </div>
+    </transition>
 
-      <div class="max-w-2xl mx-auto">
-        <!-- Step 1: Basic Info -->
-        <div v-if="currentStep === 1" class="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 class="text-xl font-semibold text-gray-900 mb-6">Basic Information</h2>
-          
-          <div class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Job Title *</label>
-              <input v-model="jobForm.title" type="text" placeholder="e.g. Senior Frontend Developer" 
-                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Category *</label>
-                <select v-model="jobForm.category" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                  <option value="programming">Programming</option>
-                  <option value="management">Management</option>
-                  <option value="design">Design</option>
-                  <option value="marketing">Marketing</option>
-                  <option value="sales">Sales</option>
-                  <option value="hr">Human Resources</option>
-                  <option value="finance">Finance</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Work Type *</label>
-                <select v-model="jobForm.workType" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                  <option value="remote">Remote</option>
-                  <option value="onsite">On-site</option>
-                  <option value="hybrid">Hybrid</option>
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Location *</label>
-              <input v-model="jobForm.location" type="text" placeholder="e.g. San Francisco, CA" 
-                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Min Salary (K) *</label>
-                <input v-model="jobForm.salaryMin" type="number" placeholder="e.g. 80" 
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Max Salary (K) *</label>
-                <input v-model="jobForm.salaryMax" type="number" placeholder="e.g. 120" 
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-              </div>
-            </div>
-          </div>
-
-          <div class="flex justify-end mt-6">
-            <button @click="nextStep" :disabled="!jobForm.title || !jobForm.location" 
-                    class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed">
-              Next Step
-            </button>
-          </div>
-        </div>
-
-        <!-- Step 2: Details -->
-        <div v-if="currentStep === 2" class="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 class="text-xl font-semibold text-gray-900 mb-6">Job Details</h2>
-          
-          <div class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Job Description *</label>
-              <textarea v-model="jobForm.description" rows="4" placeholder="Describe the job role..." 
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
-            </div>
-            
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Requirements *</label>
-              <textarea v-model="jobForm.requirements" rows="4" placeholder="List the job requirements..." 
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Skills (press Enter to add)</label>
-              <div class="flex flex-wrap gap-2 mb-2">
-                <span v-for="skill in jobForm.skills" :key="skill" class="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm flex items-center gap-1">
-                  {{ skill }}
-                  <button @click="removeSkill(skill)" class="text-blue-400 hover:text-blue-600">&times;</button>
-                </span>
-              </div>
-              <input v-model="skillInput" @keyup.enter="addSkill" type="text" placeholder="Add skills..." 
-                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-            </div>
-          </div>
-
-          <div class="flex justify-between mt-6">
-            <button @click="prevStep" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium">
-              Previous
-            </button>
-            <button @click="nextStep" :disabled="!jobForm.description || !jobForm.requirements" 
-                    class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed">
-              Next Step
-            </button>
-          </div>
-        </div>
-
-        <!-- Step 3: Review -->
-        <div v-if="currentStep === 3" class="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 class="text-xl font-semibold text-gray-900 mb-6">Review & Submit</h2>
-          
-          <div class="space-y-4">
-            <div class="p-4 bg-gray-50 rounded-lg">
-              <h3 class="font-medium text-gray-900 mb-2">{{ jobForm.title || 'Job Title' }}</h3>
-              <p class="text-sm text-gray-600">{{ jobForm.company.name }} • {{ jobForm.location }}</p>
-              <div class="flex gap-2 mt-2">
-                <span class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">{{ jobForm.workType }}</span>
-                <span class="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">{{ jobForm.category }}</span>
-              </div>
-              <p class="text-sm font-medium text-green-600 mt-2">${{ jobForm.salaryMin }}K - ${{ jobForm.salaryMax }}K</p>
-            </div>
-
-            <div>
-              <h4 class="font-medium text-gray-900 mb-1">Description</h4>
-              <p class="text-sm text-gray-600">{{ jobForm.description }}</p>
-            </div>
-
-            <div>
-              <h4 class="font-medium text-gray-900 mb-1">Requirements</h4>
-              <p class="text-sm text-gray-600">{{ jobForm.requirements }}</p>
-            </div>
-
-            <div>
-              <h4 class="font-medium text-gray-900 mb-2">Skills</h4>
-              <div class="flex flex-wrap gap-2">
-                <span v-for="skill in jobForm.skills" :key="skill" class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
-                  {{ skill }}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div class="flex justify-between mt-6">
-            <button @click="prevStep" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium">
-              Previous
-            </button>
-            <button @click="submitJob" :disabled="isSubmitting" 
-                    class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium disabled:opacity-50">
-              {{ isSubmitting ? 'Submitting...' : 'Submit Job' }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+    <Footer />
   </div>
 </template>
 
 <style scoped>
-.post-job-view {
-  min-height: 100vh;
-  background-color: #f9fafb;
-}
+
+.slide-fade-enter-active, .slide-fade-leave-active { transition: all 0.25s ease; }
+.slide-fade-enter-from { opacity: 0; transform: translateX(20px); }
+.slide-fade-leave-to { opacity: 0; transform: translateX(-20px); }
+
+.toast-enter-active, .toast-leave-active { transition: all 0.3s ease; }
+.toast-enter-from, .toast-leave-to { opacity: 0; transform: translateY(10px); }
+
+.hide-scrollbar::-webkit-scrollbar { width: 4px; }
+.hide-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 </style>

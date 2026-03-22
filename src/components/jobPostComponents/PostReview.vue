@@ -8,7 +8,7 @@ defineProps({
 
 <template>
   <div>
-    <h2 class="text-[24px] font-extrabold text-slate-900 mb-1 leading-tight">Review & Post</h2>
+    <h2 class="text-[24px] font-bold text-slate-900 mb-1 leading-tight">Review & Post</h2>
     <p class="text-[16px] text-slate-400 mb-[26px] leading-relaxed">Everything looks good? Submit your job for admin review.</p>
     
     <div class="bg-slate-50 border border-slate-200 rounded-[12px] p-[20px] flex flex-col gap-[14px]">
@@ -19,11 +19,11 @@ defineProps({
           class="w-[50px] h-[50px] rounded-[10px] object-cover border border-slate-200 p-0.5 shrink-0 bg-white" 
           alt="Logo"
         />
-        <div v-else class="w-[50px] h-[50px] rounded-[10px] bg-blue-50 border border-blue-100 text-blue-600 font-extrabold text-[20px] flex items-center justify-center shrink-0">
+        <div v-else class="w-[50px] h-[50px] rounded-[10px] bg-blue-50 border border-blue-100 text-blue-600 font-bold text-[20px] flex items-center justify-center shrink-0">
           {{ employer.initials }}
         </div>
         <div>
-          <p class="font-extrabold text-[19px] text-slate-900 mb-[6px] leading-tight">{{ modelValue.title || '—' }}</p>
+          <p class="font-bold text-[19px] text-slate-900 mb-[6px] leading-tight">{{ modelValue.title || '—' }}</p>
           <div class="flex gap-[8px] flex-wrap items-center text-[14px] text-slate-400 font-medium">
             <span v-if="modelValue.work_type" class="px-[10px] py-[3px] bg-blue-50 border border-blue-100 text-blue-600 rounded-full font-bold capitalize tracking-wide">{{ modelValue.work_type }}</span>
             <span v-if="modelValue.experience_level" class="px-[10px] py-[3px] bg-blue-50 border border-blue-100 text-blue-600 rounded-full font-bold capitalize tracking-wide">{{ modelValue.experience_level }}</span>

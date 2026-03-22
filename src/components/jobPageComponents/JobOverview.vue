@@ -49,11 +49,11 @@ const overviewRows = computed(() => [
     </div>
     <div class="space-y-1">
       <div v-for="row in overviewRows" :key="row.label" class="flex flex-col gap-1 py-3.5 border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors rounded-2xl px-3 -mx-2">
-        <div class="flex items-center gap-2.5 text-[13px] font-bold text-slate-400 uppercase tracking-wider">
+        <div class="flex items-center gap-2.5 text-[13px] font-semibold text-slate-400 uppercase tracking-wider">
           <div v-html="row.icon" class="w-3.5 h-3.5 opacity-70 text-blue-500"></div>
           {{ row.label }}
         </div>
-        <div class="font-extrabold text-slate-900 text-[15px] pl-6" :class="{ 'text-green-600': row.isGreen }">
+        <div class="font-medium text-slate-900 text-[15px] pl-6" :class="{ 'text-green-600': row.isGreen }">
           {{ row.value }}
         </div>
       </div>

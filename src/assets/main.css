@@ -351,6 +351,7 @@ input, textarea, select {
 .hover\:bg-gray-50:hover { background-color: #f9fafb; }
 .hover\:bg-blue-600:hover { background-color: #2563eb; }
 .hover\:bg-blue-700:hover { background-color: #1d4ed8; }
+.hover\:bg-white:hover { background-color: #ffffff; }
 .hover\:text-white:hover { color: #ffffff; }
 .hover\:text-blue-600:hover { color: #2563eb; }
 .hover\:text-gray-800:hover { color: #1f2937; }
@@ -358,6 +359,17 @@ input, textarea, select {
 .transition-all { transition: all 0.15s ease-in-out; }
 .transition-colors { transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out; }
 
+.hover\:from-white:hover {
+  --tw-gradient-from: #ffffff;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(255, 255, 255, 0));
+}
+.hover\:to-white:hover {
+  --tw-gradient-to: #ffffff;
+}
+.hover\:bg-white:hover {
+  background-color: #ffffff;
+  background-image: none; 
+}
 /* Space Between */
 .space-y-2 > * + * { margin-top: 0.5rem; }
 .space-y-4 > * + * { margin-top: 1rem; }

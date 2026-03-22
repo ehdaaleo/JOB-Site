@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import axios from 'axios'
 
 import ApplyJobSummary from '../components/applyJobComponents/ApplyJobSummary.vue'
@@ -19,7 +19,30 @@ const status = ref('idle')
 const loading = ref(false)
 const errorMessage = ref('')
 
+// Job details for AI cover letter generation
+const jobDetails = ref({
+  title: '',
+  company: ''
+})
+
 const API_URL = 'https://retoolapi.dev/PAj1AO/AppPost'
+const JOBS_API_URL = 'https://retoolapi.dev/PAj1AO/jobs'
+
+// Fetch job details on mount
+onMounted(async () => {
+  try {
+    const response = await axios.get(`${JOBS_API_URL}/${props.id}`)
+    if (response.data) {
+      jobDetails.value = {
+        title: response.data.job_title || response.data.title || '',
+        company: response.data.company || response.data.company_name || ''
+      }
+    }
+  } catch (error) {
+    console.error('Failed to fetch job details:', error)
+    // Use defaults - AI generation will still work with manual input
+  }
+})
 
 const handleSubmit = async (formData) => {
   loading.value = true
@@ -90,6 +113,8 @@ const handleRetry = () => {
           <!-- Application form -->
           <ApplyJobForm
             :jobId="id"
+            :jobTitle="jobDetails.title"
+            :companyName="jobDetails.company"
             :loading="loading"
             @submit="handleSubmit"
           />

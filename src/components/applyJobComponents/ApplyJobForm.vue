@@ -1,10 +1,19 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
+import axios from 'axios'
 
 const props = defineProps({
   jobId: {
     type: [String, Number],
     required: true
+  },
+  jobTitle: {
+    type: String,
+    default: ''
+  },
+  companyName: {
+    type: String,
+    default: ''
   },
   loading: {
     type: Boolean,
@@ -14,11 +23,20 @@ const props = defineProps({
 
 const emit = defineEmits(['submit'])
 
+// OpenAI API configuration
+// Using Groq for free tier - get your API key from https://console.groq.com/
+const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY
+const isGeneratingAI = ref(false)
+const aiError = ref('')
+
 // Form data
 const form = ref({
   candidate_name: '',
   email: '',
   phone: '',
+  current_role: '',
+  industry: '',
+  resume_content: '',
   cover_letter: '',
   resume: ''
 })
@@ -28,6 +46,9 @@ const touched = ref({
   candidate_name: false,
   email: false,
   phone: false,
+  current_role: false,
+  industry: false,
+  resume_content: false,
   cover_letter: false,
   resume: false
 })
@@ -69,6 +90,81 @@ const isFormValid = computed(() => {
     form.value.resume
   )
 })
+
+// AI Cover Letter Generation
+const generateCoverLetter = async () => {
+  // Validate required fields for AI generation
+  if (!form.value.current_role.trim() || !form.value.industry.trim() || !form.value.resume_content.trim()) {
+    touched.value.current_role = true
+    touched.value.industry = true
+    touched.value.resume_content = true
+    aiError.value = 'Please fill in your current role, industry, and paste your resume to generate a cover letter'
+    return
+  }
+
+  if (!GROQ_API_KEY) {
+    aiError.value = 'AI API key not configured. Please set VITE_GROQ_API_KEY in your environment variables.'
+    return
+  }
+
+  isGeneratingAI.value = true
+  aiError.value = ''
+
+  try {
+    const position = props.jobTitle || 'the position'
+    const company = props.companyName || 'the company'
+    const currentRole = form.value.current_role.trim()
+    const industry = form.value.industry.trim()
+
+    const prompt = `You're writing a cover letter applying for the 
+    ${position} at ${company}. Here's what you have so far:You're currently working as a 
+    ${currentRole} in the ${industry} and you're applying for this ${position}
+     write an attention grabbing hook for your cover letter that highlights your experience and qualifications in a way that shows you empathize and can successfully take on the challenges of the ${position} consider incorporating specific examples of how you've tackled these challenges in your past work and explore creative ideas or ways to express your enthusiasm for the opportunity keep your hook within a hundred words.. Finish writing the cover letter based on your resume and keep it within 250 words. Here's your resume: ${form.value.resume_content}`
+
+    const response = await axios.post(
+      'https://api.groq.com/openai/v1/chat/completions',
+      {
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a professional cover letter writer helping job seekers create compelling cover letters. Write in a professional, engaging tone that highlights the candidate\'s strengths and enthusiasm.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        max_tokens: 500,
+        temperature: 0.7
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${GROQ_API_KEY}`
+        }
+      }
+    )
+
+    if (response.data.choices && response.data.choices[0]) {
+      form.value.cover_letter = response.data.choices[0].message.content.trim()
+      touched.value.cover_letter = true
+    }
+  } catch (error) {
+    console.error('Groq API error:', error)
+    if (error.response?.status === 401) {
+      aiError.value = 'Invalid API key. Please check your Groq API key configuration.'
+    } else if (error.response?.status === 429) {
+      aiError.value = 'Rate limit exceeded. Please try again later.'
+    } else if (error.code === 'ECONNABORTED') {
+      aiError.value = 'Request timeout. Please check your internet connection and try again.'
+    } else {
+      aiError.value = 'Failed to generate cover letter. Please try again or write manually.'
+    }
+  } finally {
+    isGeneratingAI.value = false
+  }
+}
 
 // File handler – captures filename only
 const handleFileChange = (event) => {
@@ -184,9 +280,91 @@ const handleSubmit = () => {
       </div>
     </div>
 
+    <!-- Current Role & Industry for AI Generation -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
+      <!-- Current Role -->
+      <div class="form-group">
+        <label for="current_role" class="form-label">
+          Current Role <span class="text-red-500">*</span>
+          <span class="text-xs text-slate-400 font-normal ml-1">(for AI)</span>
+        </label>
+        <div class="form-input-wrap">
+          <svg class="form-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+          <input
+            id="current_role"
+            v-model="form.current_role"
+            @blur="markTouched('current_role')"
+            type="text"
+            placeholder="e.g. Software Engineer"
+            class="form-input"
+            :class="{ 'form-input-error': errors.current_role }"
+          />
+        </div>
+        <p v-if="errors.current_role" class="form-error">{{ errors.current_role }}</p>
+      </div>
+
+      <!-- Industry -->
+      <div class="form-group">
+        <label for="industry" class="form-label">
+          Industry <span class="text-red-500">*</span>
+          <span class="text-xs text-slate-400 font-normal ml-1">(for AI)</span>
+        </label>
+        <div class="form-input-wrap">
+          <svg class="form-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+          <input
+            id="industry"
+            v-model="form.industry"
+            @blur="markTouched('industry')"
+            type="text"
+            placeholder="e.g. Technology"
+            class="form-input"
+            :class="{ 'form-input-error': errors.industry }"
+          />
+        </div>
+        <p v-if="errors.industry" class="form-error">{{ errors.industry }}</p>
+      </div>
+    </div>
+
+    <!-- Resume Content for AI -->
+    <div class="form-group mt-5">
+      <label for="resume_content" class="form-label">
+        Your Resume <span class="text-red-500">*</span>
+        <span class="text-xs text-slate-400 font-normal ml-1">(paste for AI)</span>
+      </label>
+      <textarea
+        id="resume_content"
+        v-model="form.resume_content"
+        @blur="markTouched('resume_content')"
+        rows="4"
+        placeholder="Paste your resume content here..."
+        class="form-textarea"
+        :class="{ 'form-input-error': errors.resume_content }"
+      ></textarea>
+      <p v-if="errors.resume_content" class="form-error">{{ errors.resume_content }}</p>
+      <p class="text-xs text-slate-400 mt-1">
+        💡 Paste your resume to help AI generate a personalized cover letter
+      </p>
+    </div>
+
     <!-- Cover Letter -->
     <div class="form-group mt-5">
-      <label for="cover_letter" class="form-label">Cover Letter <span class="text-red-500">*</span></label>
+      <div class="flex items-center justify-between mb-2">
+        <label for="cover_letter" class="form-label mb-0">Cover Letter <span class="text-red-500">*</span></label>
+        <button
+          type="button"
+          @click="generateCoverLetter"
+          :disabled="isGeneratingAI"
+          class="ai-generate-btn"
+          :class="{ 'ai-generate-btn-loading': isGeneratingAI }"
+        >
+          <svg v-if="!isGeneratingAI" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          <svg v-else class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+          </svg>
+          {{ isGeneratingAI ? 'Generating...' : 'Generate with AI' }}
+        </button>
+      </div>
       <textarea
         id="cover_letter"
         v-model="form.cover_letter"
@@ -197,6 +375,10 @@ const handleSubmit = () => {
         :class="{ 'form-input-error': errors.cover_letter }"
       ></textarea>
       <p v-if="errors.cover_letter" class="form-error">{{ errors.cover_letter }}</p>
+      <p v-if="aiError" class="form-error mt-2">{{ aiError }}</p>
+      <p class="text-xs text-slate-400 mt-2">
+        💡 Fill in your Current Role, Industry, and paste your resume above, then click "Generate with AI" to create a personalized cover letter
+      </p>
     </div>
 
     <!-- Resume Upload -->
@@ -394,6 +576,38 @@ const handleSubmit = () => {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+}
+
+/* AI Generate Button */
+.ai-generate-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.875rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+}
+
+.ai-generate-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
+}
+
+.ai-generate-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.ai-generate-btn-loading {
+  background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
 }
 
 /* Submit button */

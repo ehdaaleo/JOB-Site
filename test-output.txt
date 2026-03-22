@@ -1,0 +1,21 @@
+
+> job-site@0.0.0 test:run
+> vitest run
+
+
+[7m[1m[36m RUN [39m[22m[27m [36mv1.6.1[39m [90md:/Laravel_Vue/Vue.js/JOB-Site[39m
+
+ [33m❯[39m src/views/LoginView.test.js [2m ([22m[2m0 test[22m[2m)[22m
+ [33m❯[39m src/views/ForgotPasswordView.test.js [2m ([22m[2m0 test[22m[2m)[22m
+ [33m❯[39m src/stores/counter.test.js [2m ([22m[2m0 test[22m[2m)[22m
+ [33m❯[39m src/views/ResetPasswordView.test.js [2m ([22m[2m0 test[22m[2m)[22m
+ [33m❯[39m src/views/HomeView.test.js [2m ([22m[2m0 test[22m[2m)[22m
+ [33m❯[39m src/views/AboutView.test.js [2m ([22m[2m0 test[22m[2m)[22m
+ [33m❯[39m src/views/RegisterView.test.js [2m ([22m[2m0 test[22m[2m)[22m
+ [33m❯[39m src/components/auth/register/RegisterForm.test.js [2m ([22m[2m0 test[22m[2m)[22m
+
+[2m Test Files [22m [1m[31m8 failed[39m[22m[90m (8)[39m
+[2m      Tests [22m [2mno tests[22m
+[2m   Start at [22m 08:18:16
+[2m   Duration [22m 3.30s[2m (transform 1.15s, setup 1.63s, collect 3.79s, tests 0ms, environment 9.69s, prepare 2.77s)[22m
+

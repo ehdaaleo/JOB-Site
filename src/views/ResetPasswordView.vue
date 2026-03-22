@@ -1,0 +1,106 @@
+<template>
+  <AuthLayout>
+    <AuthCard title="Reset your password" subtitle="Enter your new password below">
+      <form class="space-y-5" @submit.prevent="handleSubmit">
+        <div>
+          <label for="password" class="block text-sm font-medium text-gray-700">New password</label>
+          <div class="mt-1">
+            <input
+              id="password"
+              v-model="form.password"
+              type="password"
+              required
+              :disabled="authStore.isLoading"
+              class="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 disabled:bg-gray-100"
+            />
+          </div>
+          <PasswordStrength :password="form.password" class="mt-2" />
+        </div>
+
+        <div>
+          <label for="confirmPassword" class="block text-sm font-medium text-gray-700">Confirm password</label>
+          <div class="mt-1">
+            <input
+              id="confirmPassword"
+              v-model="form.confirmPassword"
+              type="password"
+              required
+              :disabled="authStore.isLoading"
+              class="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 disabled:bg-gray-100"
+            />
+          </div>
+          <p v-if="passwordMismatch" class="mt-1 text-sm text-red-600">Passwords do not match</p>
+        </div>
+
+        <div>
+          <button
+            type="submit"
+            :disabled="authStore.isLoading || passwordMismatch"
+            class="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {{ authStore.isLoading ? 'Resetting...' : 'Reset password' }}
+          </button>
+        </div>
+      </form>
+
+      <template #footer>
+        <p class="mt-6 text-center text-sm text-gray-600">
+          <RouterLink to="/auth/login" class="font-semibold text-indigo-600 hover:text-indigo-500">
+            Back to sign in
+          </RouterLink>
+        </p>
+      </template>
+    </AuthCard>
+  </AuthLayout>
+</template>
+
+<script setup>
+import { reactive, computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import { useToast } from 'vue-toastification'
+import AuthLayout from '../layouts/AuthLayout.vue'
+import AuthCard from '../components/auth/AuthCard.vue'
+import PasswordStrength from '../components/auth/PasswordStrength.vue'
+
+const route = useRoute()
+const router = useRouter()
+const authStore = useAuthStore()
+const toast = useToast()
+
+const form = reactive({
+  password: '',
+  confirmPassword: ''
+})
+
+const passwordMismatch = computed(() => {
+  return form.confirmPassword && form.password !== form.confirmPassword
+})
+
+const handleSubmit = async () => {
+  if (passwordMismatch.value) {
+    toast.error('Passwords do not match')
+    return
+  }
+
+  // Get token from query params (e.g., /auth/reset-password?token=abc123)
+  const token = route.query.token
+
+  if (!token) {
+    toast.error('Missing reset token. Please request a new password reset.')
+    return
+  }
+
+  const result = await authStore.resetPassword(token, form.password)
+
+  if (result.success) {
+    toast.success(result.message)
+    // Redirect to login after 2 seconds
+    setTimeout(() => {
+      router.push('/auth/login')
+    }, 2000)
+  } else {
+    toast.error(result.error)
+  }
+}
+</script>

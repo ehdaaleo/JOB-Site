@@ -17,7 +17,7 @@ const removeBen = (i) => props.modelValue.benefits.splice(i, 1)
 
 <template>
   <div>
-    <h2 class="text-[24px] font-extrabold text-slate-900 mb-1 leading-tight">Job Details</h2>
+    <h2 class="text-[24px] font-bold text-slate-900 mb-1 leading-tight">Job Details</h2>
     <p class="text-[16px] text-slate-400 mb-[26px] leading-relaxed">Describe the role clearly — good descriptions attract better candidates.</p>
     
     <div class="grid grid-cols-1 gap-[20px]">

@@ -124,12 +124,19 @@ const router = createRouter({
         },
       ],
     },
+    // Apply Job Route
+    {
+      path: '/apply/:id',
+      name: 'apply-job',
+      component: () => import('../views/ApplyJobView.vue'),
+      props: true,
+    },
     // 404 Route
     {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: () => import('../views/NotFoundView.vue'),
-    {
+    
       path: '/job/:id',
       name: 'job',
       component: () => import('../views/JobView.vue'),

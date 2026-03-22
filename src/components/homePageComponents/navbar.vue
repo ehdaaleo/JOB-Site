@@ -1,0 +1,90 @@
+<script setup>
+import { ref } from 'vue'
+import { RouterLink, useRouter } from 'vue-router'
+
+const router = useRouter()
+const isMenuOpen = ref(false)
+const isScrolled = ref(false)
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('scroll', () => {
+    isScrolled.value = window.scrollY > 10
+  })
+}
+
+const navLinks = [
+  { name: 'Home', path: '/' },
+  { name: 'Find Jobs', path: '/jobs' },
+  { name: 'Companies', path: '/companies' },
+]
+</script>
+
+<template>
+  <nav class="navbar bg-white fixed top-0 left-0 right-0 z-50 border-b border-gray-100" :class="{ 'shadow-md': isScrolled }">
+    <div class="container mx-auto px-4">
+      <div class="flex items-center justify-between w-full h-16">
+        <!-- Logo -->
+        <RouterLink to="/" class="flex items-center gap-2 no-underline">
+          <div class="w-9 h-9 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center">
+            <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5 text-white">
+              <path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <span class="text-lg font-bold text-gray-800">JobHub</span>
+        </RouterLink>
+
+        <!-- Desktop Menu -->
+        <div class="hidden md:flex items-center gap-6">
+          <RouterLink 
+            v-for="link in navLinks" 
+            :key="link.path" 
+            :to="link.path"
+            class="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors"
+          >
+            {{ link.name }}
+          </RouterLink>
+        </div>
+
+        <!-- Auth -->
+        <div class="hidden md:flex items-center gap-3">
+          <button class="text-sm font-medium text-gray-600 hover:text-gray-800" @click="router.push('/login')">
+            Log in
+          </button>
+          <button class="text-sm font-medium px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:opacity-90" @click="router.push('/register')">
+            Post a Job
+          </button>
+        </div>
+
+        <!-- Mobile -->
+        <div class="md:hidden">
+          <button class="p-2 text-gray-600 hover:text-gray-800" @click="isMenuOpen = !isMenuOpen">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile Menu -->
+      <div v-if="isMenuOpen" class="md:hidden py-3 border-t border-gray-100">
+        <div class="flex flex-col gap-2">
+          <RouterLink v-for="link in navLinks" :key="link.path" :to="link.path" class="px-3 py-2 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-50" @click="isMenuOpen = false">
+            {{ link.name }}
+          </RouterLink>
+          <div class="h-px bg-gray-200 my-1"></div>
+          <button class="px-3 py-2 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-50 text-left" @click="router.push('/login'); isMenuOpen = false">Log in</button>
+          <button class="px-3 py-2 text-sm font-medium bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg" @click="router.push('/register'); isMenuOpen = false">Post a Job</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+</template>
+
+<style scoped>
+.no-underline {
+  text-decoration: none;
+}
+.navbar {
+  min-height: 64px;
+}
+</style>

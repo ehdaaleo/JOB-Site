@@ -30,7 +30,7 @@ defineProps({
           </div>
           <div class="overflow-hidden">
             <p class="font-bold text-[17px] text-slate-900 mb-[3px] truncate" :class="{ 'text-slate-400 italic font-normal': !form.title }">
-              {{ form.title || 'Job title here…' }}
+              {{ form.title || 'Job title' }}
             </p>
             <p class="text-[14px] text-slate-500 font-medium truncate">{{ employer.name }}</p>
           </div>
@@ -43,7 +43,7 @@ defineProps({
           <span v-if="!form.work_type && !form.experience_level" class="px-[10px] py-[3px] bg-slate-100 text-slate-500 rounded-full text-[13px] font-bold tracking-wide">—</span>
         </div>
 
-        <div class="flex items-center gap-[4px] text-[14px] text-slate-500 font-medium mb-[10px] truncate"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>{{ form.location || 'Location TBD' }}</div>
+        <div class="flex items-center gap-[4px] text-[14px] text-slate-500 font-medium mb-[10px] truncate"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>{{ form.location || 'Location' }}</div>
         
         <div class="text-[15px] font-extrabold text-green-600 truncate">
           <span v-if="form.salary_min || form.salary_max">
@@ -51,7 +51,7 @@ defineProps({
             –
             ${{ form.salary_max ? form.salary_max.toLocaleString() : '?' }}
           </span>
-          <span v-else>Salary TBD</span>
+          <span v-else>Salary</span>
         </div>
 
         <div class="h-px bg-slate-200 my-[14px]"></div>
@@ -59,7 +59,7 @@ defineProps({
         <div class="text-[14px] text-slate-600 leading-[1.6] relative" :class="{ 'italic text-slate-400': !form.description }">
           {{ form.description
             ? form.description.slice(0, 60) + (form.description.length > 60 ? '…' : '')
-            : 'Description will appear here…' }}
+            : 'Description' }}
         </div>
       </div>
     </div>

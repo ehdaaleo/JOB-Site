@@ -1,22 +1,3 @@
-<template>
-  <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm">
-    <div class="text-[12px] font-bold text-slate-500 mb-5 tracking-[1.2px] uppercase flex items-center gap-3">
-      Job Overview
-      <span class="flex-1 h-px bg-slate-100"></span>
-    </div>
-    <div class="space-y-1">
-      <div v-for="row in overviewRows" :key="row.label" class="flex flex-col gap-1 py-3.5 border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors rounded-2xl px-3 -mx-2">
-        <div class="flex items-center gap-2.5 text-[13px] font-bold text-slate-400 uppercase tracking-wider">
-          <div v-html="row.icon" class="w-3.5 h-3.5 opacity-70 text-blue-500"></div>
-          {{ row.label }}
-        </div>
-        <div class="font-extrabold text-slate-900 text-[15px] pl-6" :class="{ 'text-green-600': row.isGreen }">
-          {{ row.value }}
-        </div>
-      </div>
-    </div>
-  </div>
-</template>
 
 <script setup>
 import { computed } from 'vue';
@@ -59,4 +40,26 @@ const overviewRows = computed(() => [
   }
 ]);
 </script>
+
+<template>
+  <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm">
+    <div class="text-[12px] font-bold text-slate-500 mb-5 tracking-[1.2px] uppercase flex items-center gap-3">
+      Job Overview
+      <span class="flex-1 h-px bg-slate-100"></span>
+    </div>
+    <div class="space-y-1">
+      <div v-for="row in overviewRows" :key="row.label" class="flex flex-col gap-1 py-3.5 border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors rounded-2xl px-3 -mx-2">
+        <div class="flex items-center gap-2.5 text-[13px] font-bold text-slate-400 uppercase tracking-wider">
+          <div v-html="row.icon" class="w-3.5 h-3.5 opacity-70 text-blue-500"></div>
+          {{ row.label }}
+        </div>
+        <div class="font-extrabold text-slate-900 text-[15px] pl-6" :class="{ 'text-green-600': row.isGreen }">
+          {{ row.value }}
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+
 

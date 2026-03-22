@@ -14,9 +14,10 @@ const router = createRouter({
       component: () => import('../views/JobPostPageView.vue'),
     },
     {
-      path: '/job',
+      path: '/job/:id',
       name: 'job',
       component: () => import('../views/JobView.vue'),
+      props: true,
     },
   ],
 })

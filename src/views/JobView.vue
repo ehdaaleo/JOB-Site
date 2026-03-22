@@ -1,7 +1,7 @@
-
 <script setup>
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { useJobStore } from '../stores/jobStore';
 
 // Components
 import JobHero from '../components/jobPageComponents/JobHero.vue';
@@ -14,45 +14,44 @@ import ApplyCard from '../components/jobPageComponents/ApplyCard.vue';
 import JobOverview from '../components/jobPageComponents/JobOverview.vue';
 
 
+const route = useRoute();
 const router = useRouter();
+const jobStore = useJobStore();
 
-// Mock Data
+// get job with id
 const job = ref({
-  id: 1,
-  title: 'Senior Frontend Developer',
+  title: '',
   company_name: 'ITI',
-  company_logo: '', 
+  company_logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSEgKtZiO3hayBevddOML4GOzKQYi-qX24gPg&s', 
   company_verified: true,
-  category: 'Software Engineering',
-  category_id: 'software',
-  location: 'Remote / Minya, Egypt',
-  work_type: 'Full-time',
-  posted_at: '2 days ago',
-  applications_count: 124,
-  experience_level: 'Senior (5+ years)',
-  salary_min: 80000,
-  salary_max: 120000,
-  application_deadline: 'Oct 30, 2024',
-  description: '<p>Join our dynamic team as a Senior Frontend Developer. You will be responsible for building high-quality, scalable web applications using Vue.js and modern technologies.</p><p>We value clean code, performance, and exceptional user experiences.</p>',
-  responsibilities: [
-    'Develop and maintain complex web applications using Vue 3',
-    'Collaborate with designers to implement pixel-perfect UIs',
-    'Mentor junior developers and conduct code reviews',
-    'Optimize applications for maximum speed and scalability'
-  ],
-  requirements: [
-    '5+ years of experience in frontend development',
-    'Strong proficiency in JavaScript and Vue.js ecosystem',
-    'Experience with state management (Pinia/Vuex)',
-    'Solid understanding of CSS/SCSS and responsive design'
-  ],
-  technologies: ['Vue 3', 'Vite', 'Pinia', 'TypeScript', 'Tailwind', 'Sass'],
-  benefits: [
-    'Competitive salary and equity options',
-    'Flexible working hours and remote options',
-    'Annual learning and development budget',
-    'Comprehensive health and dental insurance'
-  ]
+  category: '',
+  location: '',
+  work_type: '',
+  posted_at: '',
+  applications_count: 0,
+  experience_level: '',
+  salary_min: 0,
+  salary_max: 0,
+  application_deadline: '',
+  description: '',
+  responsibilities: [],
+  requirements: [],
+  technologies: [],
+  benefits: []
+});
+
+onMounted(() => {
+  const jobId = route.params.id;
+  if (!jobId) return;
+
+  const foundJob = jobStore.jobs.find(j => j.id.toString() === jobId.toString());
+  
+  if (foundJob) {
+    job.value = { ...foundJob };
+  }
+  //  else {
+  //  //will redirect to 404 page
+  // }
 });
 
 const isCandidate = ref(true);
@@ -60,13 +59,6 @@ const isSaved = ref(false);
 const showModal = ref(false);
 const activeTab = ref(0);
 const tabs = ['Description', 'Responsibilities', 'Requirements', 'Benefits'];
-
-const applicantAvatars = [
-  { initial: 'JD', color: '#3b82f6' },
-  { initial: 'AS', color: '#10b981' },
-  { initial: 'MK', color: '#f59e0b' },
-  { initial: '+', color: '#94a3b8' }
-];
 
 const handleApply = () => {
   showModal.value = true;

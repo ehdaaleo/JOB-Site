@@ -27,16 +27,12 @@ const router = createRouter({
       path: '/jobs/:id',
       name: 'job-detail',
       component: () => import('../views/JobDetailView.vue'),
+      props: true,
     },
     {
       path: '/companies',
       name: 'companies',
       component: () => import('../views/CompaniesView.vue'),
-    },
-    {
-      path: '/job-post',
-      name: 'job-post',
-      component: () => import('../views/JobPostPageView.vue'),
     },
     // Employer Routes
     {
@@ -48,21 +44,11 @@ const router = createRouter({
           name: 'employer-dashboard',
           component: () => import('../views/employer/EmployerDashboardView.vue'),
         },
-        {
-          path: 'post-job',
-          name: 'post-job',
-          component: () => import('../views/employer/PostJobView.vue'),
-        },
-        {
-          path: 'jobs',
-          name: 'manage-jobs',
-          component: () => import('../views/employer/ManageJobsView.vue'),
-        },
-        {
-          path: 'jobs/:id/edit',
-          name: 'edit-job',
-          component: () => import('../views/employer/PostJobView.vue'),
-        },
+       {
+      path: '/job-post',
+      name: 'job-post',
+      component: () => import('../views/employer/PostJobView.vue'),
+       },
         {
           path: 'applications',
           name: 'view-applications',
@@ -136,12 +122,7 @@ const router = createRouter({
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: () => import('../views/NotFoundView.vue'),
-    
-      path: '/job/:id',
-      name: 'job',
-      component: () => import('../views/JobView.vue'),
-      props: true,
-    },
+    }
   ],
   scrollBehavior(to, from, savedPosition) {
     if (savedPosition) {

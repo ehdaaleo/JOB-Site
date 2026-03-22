@@ -27,7 +27,7 @@ const emit = defineEmits(['next', 'back', 'submit'])
       <button
         v-if="currentStep < steps.length - 1"
         type="button"
-        class="bg-blue-600 text-white border-none px-[28px] py-[10px] rounded-lg text-[16px] font-bold hover:bg-blue-700 hover:-translate-y-px transition-all duration-200 shadow-md"
+        class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:opacity-90 border-none px-[28px] py-[10px] rounded-lg text-[16px] font-bold hover:-translate-y-px transition-all duration-200 shadow-md"
         @click="emit('next')"
       >
         Continue →
@@ -36,7 +36,7 @@ const emit = defineEmits(['next', 'back', 'submit'])
       <button
         v-else
         type="button"
-        class="bg-blue-600 text-white border-none px-[28px] py-[10px] rounded-lg text-[16px] font-bold hover:bg-blue-700 hover:-translate-y-px transition-all duration-200 min-w-[130px] flex items-center justify-center shadow-md disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+        class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:opacity-90 border-none px-[28px] py-[10px] rounded-lg text-[16px] font-bold hover:-translate-y-px transition-all duration-200 min-w-[130px] flex items-center justify-center shadow-md disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-0"
         :disabled="submitting"
         @click="emit('submit')"
       >

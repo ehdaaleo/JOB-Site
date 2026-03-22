@@ -1,20 +1,9 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-import { fetchFeaturedJobs } from '../../services/api'
+import { computed } from 'vue'
+import { useJobStore } from '../../stores/jobStore'
 
-const jobs = ref([])
-const isLoading = ref(true)
-
-onMounted(async () => {
-  try {
-    const response = await fetchFeaturedJobs()
-    jobs.value = response.data
-  } catch (err) {
-    console.error(err)
-  } finally {
-    isLoading.value = false
-  }
-})
+const jobStore = useJobStore()
+const jobs = computed(() => jobStore.featuredJobs)
 
 const formatSalary = (min, max, period) => {
   const formatNum = (num) => {
@@ -55,13 +44,8 @@ const getColor = (id) => colors[(id - 1) % colors.length]
         <p class="text-gray-500 mt-1">Explore the latest job openings</p>
       </div>
 
-      <!-- Loading -->
-      <div v-if="isLoading" class="flex justify-center py-12">
-        <div class="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-
       <!-- Jobs Grid - All Visible -->
-      <div v-else class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
         <div v-for="job in jobs" :key="job.id" class="bg-white rounded-xl border border-gray-200 p-5 hover:border-blue-300 hover:shadow-md transition-all">
           <!-- Company -->
           <div class="flex items-center gap-3 mb-4">
@@ -91,9 +75,14 @@ const getColor = (id) => colors[(id - 1) % colors.length]
           <!-- Footer -->
           <div class="flex items-center justify-between pt-3 border-t border-gray-100">
             <span class="text-xs text-gray-400">{{ timeAgo(job.postedAt) }}</span>
-            <button class="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700">Apply</button>
+            <a :href="`/jobs/${job.id}`" class="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700">Apply</a>
           </div>
         </div>
+      </div>
+
+      <!-- Empty State -->
+      <div v-if="jobs.length === 0" class="text-center py-12">
+        <p class="text-gray-500">No featured jobs available yet.</p>
       </div>
 
       <!-- View All -->

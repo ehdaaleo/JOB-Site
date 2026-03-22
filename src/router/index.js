@@ -48,21 +48,17 @@ const router = createRouter({
           name: 'employer-dashboard',
           component: () => import('../views/employer/EmployerDashboardView.vue'),
         },
+       {
+      path: '/job-post',
+      name: 'job-post',
+      component: () => import('../views/JobPostPageView.vue'),
+       },
         {
-          path: 'post-job',
-          name: 'post-job',
-          component: () => import('../views/employer/PostJobView.vue'),
-        },
-        {
-          path: 'jobs',
-          name: 'manage-jobs',
-          component: () => import('../views/employer/ManageJobsView.vue'),
-        },
-        {
-          path: 'jobs/:id/edit',
-          name: 'edit-job',
-          component: () => import('../views/employer/PostJobView.vue'),
-        },
+      path: '/job/:id',
+      name: 'job',
+      component: () => import('../views/JobView.vue'),
+      props: true,
+         },
         {
           path: 'applications',
           name: 'view-applications',
@@ -129,11 +125,6 @@ const router = createRouter({
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: () => import('../views/NotFoundView.vue'),
-    {
-      path: '/job/:id',
-      name: 'job',
-      component: () => import('../views/JobView.vue'),
-      props: true,
     },
   ],
   scrollBehavior(to, from, savedPosition) {

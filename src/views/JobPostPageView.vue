@@ -165,7 +165,36 @@ const submitJob = () => {
   
   // Actually store the job data
   setTimeout(() => {
-    jobStore.addJob(form.value)
+    // Map work_type to descriptive labels
+    const workTypeMap = {
+      'remote': 'Remote',
+      'on-site': 'On-site',
+      'hybrid': 'Hybrid'
+    }
+
+    // Capitalize location
+    const formattedLocation = form.value.location 
+      ? form.value.location.split(',').map(part => part.trim().charAt(0).toUpperCase() + part.trim().slice(1)).join(', ')
+      : '';
+
+    // Map experience level to descriptive labels with years
+    const experienceMap = {
+      'Entry': 'Entry (0-2 years)',
+      'Mid': 'Mid (2-5 years)',
+      'Senior': 'Senior (5+ years)',
+      'Lead': 'Lead (8+ years)'
+    }
+
+    jobStore.addJob({
+      ...form.value,
+      company_name: employer.value.name,
+      company_logo: employer.value.logo,
+      company_verified: employer.value.verified,
+      category: getCategoryName(form.value.category_id),
+      work_type: workTypeMap[form.value.work_type] || form.value.work_type,
+      location: formattedLocation,
+      experience_level: experienceMap[form.value.experience_level] || form.value.experience_level
+    })
     
     submitting.value = false
     submitted.value = true

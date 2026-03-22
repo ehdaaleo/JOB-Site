@@ -1,19 +1,13 @@
 <script setup>
-import { ref } from 'vue'
+import { computed } from 'vue'
+import { useApplicationStore } from '../../stores/applicationStore'
 
-const savedJobs = ref([
-  { id: 1, job: 'Senior Frontend Developer', company: 'TechCorp', location: 'San Francisco, CA', type: 'Remote', salary: '$120k - $160k', postedAt: '2024-01-10', description: 'We are looking for a Senior Frontend Developer...' },
-  { id: 2, job: 'Backend Engineer', company: 'InnovateTech', location: 'New York, NY', type: 'Hybrid', salary: '$130k - $170k', postedAt: '2024-01-08', description: 'Join our backend team to build scalable...' },
-  { id: 3, job: 'DevOps Engineer', company: 'InfraTech', location: 'Seattle, WA', type: 'Hybrid', salary: '$140k - $180k', postedAt: '2024-01-05', description: 'Manage cloud infrastructure and CI/CD...' },
-  { id: 4, job: 'Data Scientist', company: 'DataLabs', location: 'San Francisco, CA', type: 'On-site', salary: '$130k - $170k', postedAt: '2024-01-02', description: 'Analyze data and build ML models...' },
-])
+const applicationStore = useApplicationStore()
+const savedJobs = computed(() => applicationStore.mySavedJobs)
 
 const removeSaved = (job) => {
   if (confirm('Remove this job from saved?')) {
-    const index = savedJobs.value.findIndex(j => j.id === job.id)
-    if (index > -1) {
-      savedJobs.value.splice(index, 1)
-    }
+    applicationStore.unsaveJob(job.jobId)
   }
 }
 </script>
@@ -67,7 +61,7 @@ const removeSaved = (job) => {
               <p class="text-sm text-gray-500 line-clamp-2">{{ job.description }}</p>
             </div>
             <div class="flex flex-col gap-2 lg:min-w-[140px]">
-              <a :href="`/jobs/${job.id}`" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm text-center">
+              <a :href="`/jobs/${job.jobId}`" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm text-center">
                 View Details
               </a>
               <button @click="removeSaved(job)" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium text-sm">

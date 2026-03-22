@@ -44,21 +44,11 @@ const router = createRouter({
           name: 'employer-dashboard',
           component: () => import('../views/employer/EmployerDashboardView.vue'),
         },
-        {
-          path: 'post-job',
-          name: 'post-job',
-          component: () => import('../views/employer/PostJobView.vue'),
-        },
-        {
-          path: 'jobs',
-          name: 'manage-jobs',
-          component: () => import('../views/employer/ManageJobsView.vue'),
-        },
-        {
-          path: 'jobs/:id/edit',
-          name: 'edit-job',
-          component: () => import('../views/employer/PostJobView.vue'),
-        },
+       {
+      path: '/job-post',
+      name: 'job-post',
+      component: () => import('../views/employer/PostJobView.vue'),
+       },
         {
           path: 'applications',
           name: 'view-applications',

@@ -7,6 +7,7 @@ const profile = computed(() => profileStore.profile)
 
 const isEditing = ref(false)
 const editData = ref({})
+const newSkill = ref('')
 
 const toggleEdit = () => {
   if (isEditing.value) {
@@ -24,10 +25,9 @@ const saveProfile = () => {
 }
 
 const addSkill = () => {
-  const input = document.getElementById('new-skill')
-  if (input && input.value.trim()) {
-    profileStore.addSkill(input.value.trim())
-    input.value = ''
+  if (newSkill.value.trim()) {
+    profileStore.addSkill(newSkill.value.trim())
+    newSkill.value = ''
   }
 }
 
@@ -134,7 +134,7 @@ const removeSkill = (skill) => {
                 </span>
               </div>
               <div class="flex gap-2">
-                <input id="new-skill" type="text" placeholder="Add skill" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg">
+                <input v-model="newSkill" type="text" placeholder="Add skill" aria-label="Add new skill" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg" @keyup.enter="addSkill">
                 <button @click="addSkill" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Add</button>
               </div>
             </div>

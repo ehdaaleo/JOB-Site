@@ -16,6 +16,7 @@ import JobRequirements from '../components/jobPageComponents/JobRequirements.vue
 import JobBenefits from '../components/jobPageComponents/JobBenefits.vue';
 import ApplyCard from '../components/jobPageComponents/ApplyCard.vue';
 import JobOverview from '../components/jobPageComponents/JobOverview.vue';
+import JobComments from '../components/jobPageComponents/JobComments.vue';
 
 
 const route = useRoute();
@@ -94,7 +95,7 @@ const isCandidate = ref(true);
 const isSaved = ref(false);
 const showModal = ref(false);
 const activeTab = ref(0);
-const tabs = ['Description', 'Responsibilities', 'Requirements', 'Benefits'];
+const tabs = ['Description', 'Responsibilities', 'Requirements', 'Benefits', 'Comments'];
 
 const handleApply = () => {
   showModal.value = true;
@@ -158,6 +159,7 @@ const goToApply = () => {
             <JobResponsibilities :responsibilities="job.responsibilities" id="section-1" />
             <JobRequirements :requirements="job.requirements" :technologies="job.technologies" id="section-2" />
             <JobBenefits :benefits="job.benefits" id="section-3" />
+            <JobComments :jobId="route.params.id" id="section-4" />
           </div>
   
           <!-- Sidebar (Right) -->

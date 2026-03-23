@@ -25,7 +25,61 @@ export const useJobStore = defineStore('jobs', () => {
       deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       featured: true,
       status: 'active', // pending, active, rejected
-      applicationsCount: 12
+      applicationsCount: 12,
+      comments: [
+        {
+          id: 'c1',
+          user: {
+            id: 'u2',
+            name: 'Issac',
+            initials: 'IS',
+            avatarColor: '#10b981',
+            role: 'Employer'
+          },
+          time: '2 hours ago',
+          content: 'We are very excited to hear from all the applicants! Feel free to ask any questions about the role here.',
+          timestamp: Date.now() - 7200000 
+        },
+        {
+          id: 'c2',
+          user: {
+            id: 'u3',
+            name: 'Gerges',
+            initials: 'GJ',
+            avatarColor: '#3b82f6',
+            role: 'Candidate'
+          },
+          time: '1 hour ago',
+          content: 'Is this role strictly onsite or does it offer a hybrid schedule?',
+          timestamp: Date.now() - 3600000 
+        },
+        {
+          id: 'c3',
+          user: {
+            id: 'u4',
+            name: 'Ehdaa',
+            initials: 'ED',
+            avatarColor: '#f59e0b',
+            role: 'Candidate'
+          },
+          time: '30 mins ago',
+          content: 'What is the interview process like?',
+          timestamp: Date.now() - 1800000
+        },
+        {
+          id: 'c4',
+          user: {
+            id: 'u5',
+            name: 'Abdo tolba',
+            initials: 'AT',
+            avatarColor: '#6366f1',
+            role: 'Candidate'
+          },
+          time: '10 mins ago',
+          content: 'Just submitted my application!',
+          timestamp: Date.now() - 600000
+        }
+      ]
     },
     {
       id: 2,
@@ -48,7 +102,8 @@ export const useJobStore = defineStore('jobs', () => {
       deadline: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000).toISOString(),
       featured: true,
       status: 'active',
-      applicationsCount: 8
+      applicationsCount: 8,
+      comments: []
     },
     {
       id: 3,
@@ -71,7 +126,8 @@ export const useJobStore = defineStore('jobs', () => {
       deadline: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000).toISOString(),
       featured: true,
       status: 'active',
-      applicationsCount: 15
+      applicationsCount: 15,
+      comments: []
     },
     {
       id: 4,
@@ -94,7 +150,8 @@ export const useJobStore = defineStore('jobs', () => {
       deadline: new Date(Date.now() + 28 * 24 * 60 * 60 * 1000).toISOString(),
       featured: false,
       status: 'active',
-      applicationsCount: 6
+      applicationsCount: 6,
+      comments: []
     },
     {
       id: 5,
@@ -117,7 +174,8 @@ export const useJobStore = defineStore('jobs', () => {
       deadline: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
       featured: false,
       status: 'active',
-      applicationsCount: 9
+      applicationsCount: 9,
+      comments: []
     },
     {
       id: 6,
@@ -140,7 +198,8 @@ export const useJobStore = defineStore('jobs', () => {
       deadline: new Date(Date.now() + 22 * 24 * 60 * 60 * 1000).toISOString(),
       featured: false,
       status: 'pending',
-      applicationsCount: 0
+      applicationsCount: 0,
+      comments: []
     }
   ]
 
@@ -191,7 +250,8 @@ export const useJobStore = defineStore('jobs', () => {
       id: jobs.value.length + 1,
       postedAt: new Date().toISOString(),
       status: 'pending', // New jobs go to pending
-      applicationsCount: 0
+      applicationsCount: 0,
+      comments: []
     }
     jobs.value.push(newJob)
     return newJob

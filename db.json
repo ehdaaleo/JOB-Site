@@ -1,0 +1,133 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "name": "Test Candidate",
+      "email": "freelancer@example.com",
+      "password": "password123",
+      "role": "candidate",
+      "profile": {
+        "title": "Frontend Developer",
+        "bio": "Passionate developer with 5 years of experience",
+        "skills": [
+          "Vue.js",
+          "React",
+          "TypeScript",
+          "JavaScript"
+        ],
+        "experience": "senior",
+        "education": "bachelor",
+        "location": "San Francisco, CA",
+        "phone": "+1 (555) 123-4567"
+      },
+      "createdAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "2",
+      "name": "Test Company",
+      "email": "company@example.com",
+      "password": "password123",
+      "role": "employer",
+      "employerType": "company",
+      "company": {
+        "name": "TechCorp Inc.",
+        "size": "201-500",
+        "industry": "technology",
+        "website": "https://techcorp.example.com",
+        "description": "Building the future of technology",
+        "location": "San Francisco, CA"
+      },
+      "createdAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "3",
+      "name": "Test Individual Employer",
+      "email": "individual@example.com",
+      "password": "password123",
+      "role": "employer",
+      "employerType": "individual",
+      "employer": {
+        "jobTitle": "Hiring Manager",
+        "company": "StartupXYZ"
+      },
+      "createdAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "4",
+      "name": "Admin User",
+      "email": "admin@example.com",
+      "password": "password123",
+      "role": "admin",
+      "createdAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "Isaac Nady Gad Gawergy",
+      "email": "isaacse7s3@gmail.com",
+      "password": "D:\\Laravel_Vue\\Vue2\\JOB-Site",
+      "role": "employer",
+      "employerType": "individual",
+      "acceptedTerms": true,
+      "user_id": null,
+      "company_name": null,
+      "company_logo": null,
+      "phone": "",
+      "linkedin_profile": "",
+      "resume": null,
+      "profile_picture": null,
+      "bio": "atss\n",
+      "location": "",
+      "headline": "",
+      "skills": "",
+      "experience": "",
+      "companyWebsite": "",
+      "companySize": "",
+      "industry": "technology",
+      "companyDescription": "",
+      "logo": null,
+      "organization": "at",
+      "jobTitle": "atss",
+      "id": "5Klo6ZIu9aE"
+    }
+  ],
+  "passwordResets": [],
+  "jobs": [
+    {
+      "id": "1",
+      "title": "Senior Frontend Developer",
+      "company": {
+        "id": "2",
+        "name": "TechCorp Inc.",
+        "logo": null,
+        "location": "San Francisco, CA",
+        "industry": "Technology"
+      },
+      "location": "San Francisco, CA",
+      "workType": "remote",
+      "salaryMin": 120000,
+      "salaryMax": 160000,
+      "salaryPeriod": "yearly",
+      "salaryCurrency": "USD",
+      "skills": [
+        "Vue.js",
+        "React",
+        "TypeScript",
+        "Node.js",
+        "GraphQL"
+      ],
+      "description": "We're looking for a Senior Frontend Developer to join our team...",
+      "responsibilities": "- Lead frontend development\n- Mentor junior developers\n- Collaborate with design team",
+      "requirements": "- 5+ years frontend experience\n- Strong Vue.js/React skills\n- Experience with TypeScript",
+      "category": "programming",
+      "type": "full-time",
+      "experienceLevel": "senior",
+      "postedAt": "2024-01-15T10:00:00.000Z",
+      "deadline": "2024-02-15T23:59:59.000Z",
+      "featured": true,
+      "status": "active",
+      "applicationsCount": 12
+    }
+  ],
+  "applications": [],
+  "companies": [],
+  "$schema": "./node_modules/json-server/schema.json"
+}

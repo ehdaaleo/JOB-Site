@@ -1,5 +1,6 @@
 <script setup>
 import { ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import JobPostTopBar from '@/components/jobPostComponents/PostTopBar.vue'
 import JobPostProgress from '@/components/jobPostComponents/PostProgress.vue'
 import JobPostBasics from '@/components/jobPostComponents/PostBasics.vue'
@@ -12,6 +13,7 @@ import Navbar from '@/components/homePageComponents/navbar.vue'
 import Footer from '@/components/homePageComponents/footer.vue'
 
 const currentStep = ref(0)
+const router = useRouter()
 const steps = ref([
   { label: 'Basics' },
   { label: 'Details' },
@@ -188,14 +190,31 @@ const submitJob = () => {
     }
 
     jobStore.addJob({
-      ...form.value,
-      company_name: employer.value.name,
-      company_logo: employer.value.logo,
-      company_verified: employer.value.verified,
+      title: form.value.title,
+      description: form.value.description,
+      responsibilities: form.value.responsibilities,
+      requirements: form.value.requirements,
+      benefits: form.value.benefits,
+      skills: form.value.technologies,
+      company: {
+        id: Date.now(),
+        name: employer.value.name,
+        email: employer.value.email,
+        location: employer.value.location,
+        logo: employer.value.logo,
+        verified: employer.value.verified
+      },
       category: getCategoryName(form.value.category_id),
-      work_type: workTypeMap[form.value.work_type] || form.value.work_type,
+      workType: workTypeMap[form.value.work_type] || form.value.work_type,
       location: formattedLocation,
-      experience_level: experienceMap[form.value.experience_level] || form.value.experience_level
+      experienceLevel: experienceMap[form.value.experience_level] || form.value.experience_level,
+      salaryMin: form.value.salary_min,
+      salaryMax: form.value.salary_max,
+      deadline: form.value.application_deadline,
+      type: 'full-time',
+      salaryCurrency: 'USD',
+      salaryPeriod: 'yearly',
+      comments: []
     })
     
     submitting.value = false

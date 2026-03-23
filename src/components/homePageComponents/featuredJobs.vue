@@ -53,7 +53,7 @@ const getColor = (id) => colors[(id - 1) % colors.length]
               {{ job.company.name.charAt(0) }}
             </div>
             <div>
-              <h3 class="font-semibold text-gray-900 text-sm">{{ job.title }}</h3>
+              <router-link :to="`/jobs/${job.id}`" class="font-semibold text-gray-900 text-sm hover:text-blue-600">{{ job.title }}</router-link>
               <p class="text-xs text-gray-500">{{ job.company.name }}</p>
             </div>
           </div>
@@ -75,7 +75,7 @@ const getColor = (id) => colors[(id - 1) % colors.length]
           <!-- Footer -->
           <div class="flex items-center justify-between pt-3 border-t border-gray-100">
             <span class="text-xs text-gray-400">{{ timeAgo(job.postedAt) }}</span>
-            <a :href="`/apply/:id/${job.id}`" class="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700">Apply</a>
+            <router-link :to="`/apply/${job.id}`" class="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700">Apply</router-link>
           </div>
         </div>
       </div>

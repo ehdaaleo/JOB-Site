@@ -98,7 +98,7 @@ const activeTab = ref(0);
 const tabs = ['Description', 'Responsibilities', 'Requirements', 'Benefits', 'Comments'];
 
 const handleApply = () => {
-  showModal.value = true;
+  router.push(`/apply/${route.params.id}`);
 };
 
 const toggleSave = () => {
@@ -113,14 +113,6 @@ const scrollToSection = (index) => {
   }
 };
 
-const goToApply = () => {
-  if (isCandidate.value) {
-    alert('Redirecting to application form...');
-  } else {
-    router.push('/login');
-  }
-  showModal.value = false;
-};
 </script>
 
 <template>

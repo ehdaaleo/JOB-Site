@@ -1,12 +1,8 @@
 <script setup>
 import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
 import { useApplicationStore } from '../../stores/applicationStore'
-import { usePaymentStore } from '../../stores/paymentStore'
 
-const router = useRouter()
 const applicationStore = useApplicationStore()
-const paymentStore = usePaymentStore()
 
 const applications = computed(() => applicationStore.applications)
 const statusFilter = ref('')
@@ -42,14 +38,6 @@ const rejectApplication = (app) => {
     app.status = 'rejected'
   }
 }
-
-const isContactUnlocked = (appId) => {
-  return paymentStore.hasUnlockedContact(appId)
-}
-
-const unlockContact = (app) => {
-  router.push({ name: 'payment-checkout', params: { applicationId: app.id } })
-}
 </script>
 
 <template>
@@ -61,14 +49,9 @@ const unlockContact = (app) => {
           <h1 class="text-2xl font-bold text-gray-900">Applications</h1>
           <p class="text-sm text-gray-500">Review and manage candidate applications</p>
         </div>
-        <div class="flex items-center gap-3">
-          <button @click="router.push({ name: 'payment-history' })" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium text-sm">
-            Payment History
-          </button>
-          <a href="/jobs" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm">
-            Post a Job
-          </a>
-        </div>
+        <a href="/job-post" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm">
+          Post a Job
+        </a>
       </div>
     </div>
 
@@ -96,7 +79,6 @@ const unlockContact = (app) => {
       <div class="space-y-4">
         <div v-for="app in filteredApps" :key="app.id" class="bg-white rounded-xl border border-gray-200 p-6">
           <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            <!-- App Info -->
             <div class="flex items-start gap-4 flex-1">
               <div class="w-11 h-11 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold flex-shrink-0">
                 {{ (app.candidateName || 'C')[0] }}
@@ -118,13 +100,10 @@ const unlockContact = (app) => {
               </div>
             </div>
 
-            <!-- Actions -->
             <div class="flex items-center gap-2 flex-shrink-0">
               <button @click="viewDetails(app)" class="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium text-sm">
                 Details
               </button>
-
-              <!-- Pending: Accept / Reject -->
               <template v-if="app.status === 'pending' || app.status === 'interviewing'">
                 <button @click="acceptApplication(app)" class="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium text-sm">
                   Accept
@@ -133,31 +112,11 @@ const unlockContact = (app) => {
                   Reject
                 </button>
               </template>
-
-              <!-- Accepted: Unlock Contact or View Contact -->
-              <template v-if="app.status === 'accepted'">
-                <button
-                  v-if="!isContactUnlocked(app.id)"
-                  @click="unlockContact(app)"
-                  class="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm flex items-center gap-2"
-                >
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
-                  Unlock Contact - $4.99
-                </button>
-                <span v-else class="px-3 py-2 bg-green-50 text-green-700 rounded-lg font-medium text-sm flex items-center gap-2">
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
-                  </svg>
-                  Contact Unlocked
-                </span>
-              </template>
             </div>
           </div>
 
-          <!-- Unlocked Contact Info -->
-          <div v-if="app.status === 'accepted' && isContactUnlocked(app.id)" class="mt-4 bg-green-50 border border-green-200 rounded-lg p-4">
+          <!-- Contact info shown freely for accepted candidates -->
+          <div v-if="app.status === 'accepted'" class="mt-4 bg-green-50 border border-green-200 rounded-lg p-4">
             <h4 class="text-sm font-semibold text-green-900 mb-2">Contact Details</h4>
             <div class="flex flex-wrap gap-6 text-sm">
               <div class="flex items-center gap-2">
@@ -237,7 +196,6 @@ const unlockContact = (app) => {
 
           <div class="text-sm text-gray-500 mb-6">Applied on {{ selectedApp.date }}</div>
 
-          <!-- Actions in Modal -->
           <div class="flex gap-3">
             <template v-if="selectedApp.status === 'pending' || selectedApp.status === 'interviewing'">
               <button @click="acceptApplication(selectedApp); showModal = false" class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">
@@ -245,11 +203,6 @@ const unlockContact = (app) => {
               </button>
               <button @click="rejectApplication(selectedApp); showModal = false" class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium">
                 Reject
-              </button>
-            </template>
-            <template v-if="selectedApp.status === 'accepted' && !isContactUnlocked(selectedApp.id)">
-              <button @click="unlockContact(selectedApp)" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
-                Unlock Contact - $4.99
               </button>
             </template>
           </div>

@@ -60,12 +60,6 @@ const router = createRouter({
           component: () => import('../views/employer/CompanySettingsView.vue'),
         },
         {
-          path: 'payment/:applicationId',
-          name: 'payment-checkout',
-          component: () => import('../views/employer/PaymentCheckoutView.vue'),
-          props: true,
-        },
-        {
           path: 'payments',
           name: 'payment-history',
           component: () => import('../views/employer/PaymentHistoryView.vue'),

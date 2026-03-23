@@ -2,11 +2,9 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
 export const usePaymentStore = defineStore('payments', () => {
-  // Load from localStorage if available
   const stored = JSON.parse(localStorage.getItem('vuelance_payments') || '[]')
   const payments = ref(stored)
 
-  // Save to localStorage whenever payments change
   const persist = () => {
     localStorage.setItem('vuelance_payments', JSON.stringify(payments.value))
   }
@@ -26,23 +24,12 @@ export const usePaymentStore = defineStore('payments', () => {
     return payments.value.find(p => p.id === id)
   }
 
-  const getPaymentByApplicationId = (applicationId) => {
-    return payments.value.find(p => p.applicationId === applicationId && p.status === 'completed')
-  }
-
-  const hasUnlockedContact = (applicationId) => {
-    return payments.value.some(
-      p => p.applicationId === applicationId && p.status === 'completed'
-    )
-  }
-
   // Actions
-  const createPayment = (applicationId, jobTitle, candidateName, amount = 4.99) => {
+  const createPayment = (jobTitle, companyName, amount = 9.99) => {
     const payment = {
       id: 'PAY-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
-      applicationId,
       jobTitle,
-      candidateName,
+      companyName,
       amount,
       currency: 'USD',
       method: 'paypal',
@@ -68,7 +55,7 @@ export const usePaymentStore = defineStore('payments', () => {
       receiptNumber: 'REC-' + Date.now().toString(36).toUpperCase(),
       transactionId: payment.paypalOrderId,
       date: payment.completedAt,
-      description: `Contact unlock for ${payment.candidateName} - ${payment.jobTitle}`,
+      description: `Job posting fee: ${payment.jobTitle} - ${payment.companyName}`,
       amount: payment.amount,
       currency: payment.currency,
       method: 'PayPal',
@@ -93,8 +80,6 @@ export const usePaymentStore = defineStore('payments', () => {
     completedPayments,
     pendingPayments,
     getPaymentById,
-    getPaymentByApplicationId,
-    hasUnlockedContact,
     createPayment,
     completePayment,
     failPayment,

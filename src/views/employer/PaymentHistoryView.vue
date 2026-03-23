@@ -97,12 +97,12 @@ const totalSpent = computed(() =>
           <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div class="flex-1">
               <div class="flex items-center gap-3 mb-2">
-                <h3 class="text-lg font-semibold text-gray-900">{{ payment.candidateName }}</h3>
+                <h3 class="text-lg font-semibold text-gray-900">{{ payment.jobTitle }}</h3>
                 <span :class="`text-xs px-2 py-1 rounded-full font-medium ${getStatusClass(payment.status)}`">
                   {{ payment.status }}
                 </span>
               </div>
-              <p class="text-sm text-gray-600 mb-1">{{ payment.jobTitle }}</p>
+              <p class="text-sm text-gray-600 mb-1">{{ payment.companyName }}</p>
               <div class="flex flex-wrap gap-4 text-sm text-gray-500">
                 <span>${{ payment.amount.toFixed(2) }} {{ payment.currency }}</span>
                 <span>via {{ payment.method === 'paypal' ? 'PayPal' : payment.method }}</span>

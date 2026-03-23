@@ -7,6 +7,7 @@ import JobPostBasics from '@/components/jobPostComponents/PostBasics.vue'
 import JobPostDetails from '@/components/jobPostComponents/PostDetails.vue'
 import JobPostSkills from '@/components/jobPostComponents/PostSkills.vue'
 import JobPostReview from '@/components/jobPostComponents/PostReview.vue'
+import JobPostPayment from '@/components/jobPostComponents/PostPayment.vue'
 import JobPostLivePreview from '@/components/jobPostComponents/PostLivePreview.vue'
 import JobPostFooter from '@/components/jobPostComponents/PostFooter.vue'
 import Navbar from '@/components/homePageComponents/navbar.vue'
@@ -18,7 +19,8 @@ const steps = ref([
   { label: 'Basics' },
   { label: 'Details' },
   { label: 'Skills' },
-  { label: 'Review' }
+  { label: 'Review' },
+  { label: 'Payment' }
 ])
 
 const employer = ref({
@@ -137,8 +139,10 @@ const validateStep = (step) => {
 }
 
 import { useJobStore } from '@/stores/jobStore'
+import { usePaymentStore } from '@/stores/paymentStore'
 
 const jobStore = useJobStore()
+const paymentStore = usePaymentStore()
 
 const handleNext = () => {
   if (validateStep(currentStep.value)) {
@@ -163,68 +167,70 @@ const handleStepClick = (index) => {
 const submitting = ref(false)
 const submitted = ref(false)
 
-const submitJob = () => {
-  if (!validateStep(currentStep.value)) return;
-  submitting.value = true
-  
-  // Actually store the job data
+const onPaymentComplete = (paymentData) => {
+  // Record payment in store
+  const payment = paymentStore.createPayment(
+    form.value.title,
+    employer.value.name,
+    paymentData.amount
+  )
+  paymentStore.completePayment(payment.id, paymentData.orderId)
+
+  // Map work_type to descriptive labels
+  const workTypeMap = {
+    'remote': 'Remote',
+    'on-site': 'On-site',
+    'hybrid': 'Hybrid'
+  }
+
+  const formattedLocation = form.value.location
+    ? form.value.location.split(',').map(part => part.trim().charAt(0).toUpperCase() + part.trim().slice(1)).join(', ')
+    : '';
+
+  const experienceMap = {
+    'Entry': 'Entry (0-2 years)',
+    'Mid': 'Mid (2-5 years)',
+    'Senior': 'Senior (5+ years)',
+    'Lead': 'Lead (8+ years)'
+  }
+
+  jobStore.addJob({
+    title: form.value.title,
+    description: form.value.description,
+    responsibilities: form.value.responsibilities,
+    requirements: form.value.requirements,
+    benefits: form.value.benefits,
+    skills: form.value.technologies,
+    company: {
+      id: Date.now(),
+      name: employer.value.name,
+      email: employer.value.email,
+      location: employer.value.location,
+      logo: employer.value.logo,
+      verified: employer.value.verified
+    },
+    category: getCategoryName(form.value.category_id),
+    workType: workTypeMap[form.value.work_type] || form.value.work_type,
+    location: formattedLocation,
+    experienceLevel: experienceMap[form.value.experience_level] || form.value.experience_level,
+    salaryMin: form.value.salary_min,
+    salaryMax: form.value.salary_max,
+    deadline: form.value.application_deadline,
+    type: 'full-time',
+    salaryCurrency: 'USD',
+    salaryPeriod: 'yearly',
+    comments: []
+  })
+
+  submitted.value = true
   setTimeout(() => {
-    // Map work_type to descriptive labels
-    const workTypeMap = {
-      'remote': 'Remote',
-      'on-site': 'On-site',
-      'hybrid': 'Hybrid'
-    }
+    submitted.value = false
+    router.push('/')
+  }, 3000)
+}
 
-    // Capitalize location
-    const formattedLocation = form.value.location 
-      ? form.value.location.split(',').map(part => part.trim().charAt(0).toUpperCase() + part.trim().slice(1)).join(', ')
-      : '';
-
-    // Map experience level to descriptive labels with years
-    const experienceMap = {
-      'Entry': 'Entry (0-2 years)',
-      'Mid': 'Mid (2-5 years)',
-      'Senior': 'Senior (5+ years)',
-      'Lead': 'Lead (8+ years)'
-    }
-
-    jobStore.addJob({
-      title: form.value.title,
-      description: form.value.description,
-      responsibilities: form.value.responsibilities,
-      requirements: form.value.requirements,
-      benefits: form.value.benefits,
-      skills: form.value.technologies,
-      company: {
-        id: Date.now(),
-        name: employer.value.name,
-        email: employer.value.email,
-        location: employer.value.location,
-        logo: employer.value.logo,
-        verified: employer.value.verified
-      },
-      category: getCategoryName(form.value.category_id),
-      workType: workTypeMap[form.value.work_type] || form.value.work_type,
-      location: formattedLocation,
-      experienceLevel: experienceMap[form.value.experience_level] || form.value.experience_level,
-      salaryMin: form.value.salary_min,
-      salaryMax: form.value.salary_max,
-      deadline: form.value.application_deadline,
-      type: 'full-time',
-      salaryCurrency: 'USD',
-      salaryPeriod: 'yearly',
-      comments: []
-    })
-    
-    submitting.value = false
-    submitted.value = true
-    setTimeout(() => {
-      submitted.value = false
-      //will redirect to home page after 3 seconds
-      router.push('/')
-    }, 3000)
-  }, 1500)
+const onPaymentFailed = (reason) => {
+  console.error('Payment failed:', reason)
 }
 </script>
 
@@ -249,6 +255,7 @@ const submitJob = () => {
               <JobPostDetails v-else-if="currentStep === 1" v-model="form" :errors="errors" />
               <JobPostSkills v-else-if="currentStep === 2" v-model="form" :errors="errors" />
               <JobPostReview v-else-if="currentStep === 3" v-model="form" :employer="employer" :getCategoryName="getCategoryName" />
+              <JobPostPayment v-else-if="currentStep === 4" :form="form" :employer="employer" @paymentComplete="onPaymentComplete" @paymentFailed="onPaymentFailed" />
             </transition>
           </div>
   
@@ -264,13 +271,13 @@ const submitJob = () => {
         </div>
   
         <!-- Footer Component -->
-        <JobPostFooter 
-          :currentStep="currentStep" 
-          :steps="steps" 
+        <JobPostFooter
+          :currentStep="currentStep"
+          :steps="steps"
           :submitting="submitting"
+          :hideSubmit="currentStep === 4"
           @next="handleNext"
           @back="handleBack"
-          @submit="submitJob"
         />
       </div>
     </div>

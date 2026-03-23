@@ -75,7 +75,7 @@ const getColor = (id) => colors[(id - 1) % colors.length]
           <!-- Footer -->
           <div class="flex items-center justify-between pt-3 border-t border-gray-100">
             <span class="text-xs text-gray-400">{{ timeAgo(job.postedAt) }}</span>
-            <a :href="`/jobs/${job.id}`" class="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700">Apply</a>
+            <a :href="`/apply/:id/${job.id}`" class="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700">Apply</a>
           </div>
         </div>
       </div>

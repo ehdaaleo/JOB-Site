@@ -127,9 +127,9 @@ const getWorkTypeClass = (type) => {
                 </span>
               </div>
             </div>
-            <a :href="`/jobs/${job.id}`" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm whitespace-nowrap">
+            <RouterLink :to="`/jobs/${job.id}`" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm whitespace-nowrap">
               Apply Now
-            </a>
+            </RouterLink>
           </div>
         </div>
       </div>

@@ -1,7 +1,7 @@
 
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useJobStore } from '../stores/jobStore';
 
@@ -44,18 +44,50 @@ const job = ref({
   benefits: []
 });
 
-onMounted(() => {
-  const jobId = route.params.id;
-  if (!jobId) return;
-
-  const foundJob = jobStore.jobs.find(j => j.id.toString() === jobId.toString());
+const fetchJob = (id) => {
+  if (!id) return;
+  console.log('Fetching job with ID:', id);
+  const foundJob = jobStore.getJobById(id);
+  console.log('Found job from store:', foundJob);
   
   if (foundJob) {
-    job.value = { ...foundJob };
+    // Map store data to component data
+    job.value = {
+      ...foundJob,
+      company_name: foundJob.company?.name || 'ITI',
+      company_logo: foundJob.company?.logo || 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSEgKtZiO3hayBevddOML4GOzKQYi-qX24gPg&s',
+      company_verified: foundJob.company?.verified ?? true,
+      work_type: foundJob.workType || '',
+      posted_at: foundJob.postedAt || '',
+      applications_count: foundJob.applicationsCount || 0,
+      experience_level: foundJob.experienceLevel || '',
+      salary_min: foundJob.salaryMin || 0,
+      salary_max: foundJob.salaryMax || 0,
+      application_deadline: foundJob.deadline || '',
+      // Convert strings to arrays if necessary
+      responsibilities: typeof foundJob.responsibilities === 'string' 
+        ? foundJob.responsibilities.split('\n').filter(s => s.trim()).map(s => s.replace(/^- /, '')) 
+        : (foundJob.responsibilities || []),
+      requirements: typeof foundJob.requirements === 'string' 
+        ? foundJob.requirements.split('\n').filter(s => s.trim()).map(s => s.replace(/^- /, '')) 
+        : (foundJob.requirements || []),
+      technologies: foundJob.skills || [],
+      benefits: foundJob.benefits || []
+    };
+  } else {
+    console.warn(`Job with ID ${id} not found.`);
+    // You could redirect to a 404 page here
+    router.push('/404');
   }
-  //  else {
-  //  //will redirect to 404 page
-  // }
+};
+
+onMounted(() => {
+  fetchJob(route.params.id);
+});
+
+// Watch for route param changes 
+watch(() => route.params.id, (newId) => {
+  fetchJob(newId);
 });
 
 const isCandidate = ref(true);

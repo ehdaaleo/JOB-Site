@@ -145,7 +145,33 @@ export const useJobStore = defineStore('jobs', () => {
   ]
 
   // Initialize from LocalStorage or use Mock Data
-  const jobs = ref(JSON.parse(localStorage.getItem('jobs')) || initialData)
+  const initializeJobs = () => {
+    let loadedJobs = []
+    try {
+      const saved = localStorage.getItem('jobs')
+      if (saved && saved !== 'undefined' && saved !== 'null') {
+        const parsedJobs = JSON.parse(saved)
+        if (Array.isArray(parsedJobs)) {
+          loadedJobs = parsedJobs
+        }
+      }
+    } catch (e) {
+      console.error('Failed to parse jobs from localStorage', e)
+    }
+//merge mock data with local storage data
+    const mergedJobs = [...initialData]
+    for (const job of loadedJobs) {
+      const idx = mergedJobs.findIndex(j => String(j.id) === String(job.id))
+      if (idx !== -1) {
+        mergedJobs[idx] = job // LocalStorage version takes priority if modified
+      } else {
+        mergedJobs.push(job) // Append new jobs
+      }
+    }
+    return mergedJobs
+  }
+
+  const jobs = ref(initializeJobs())
 
   // Watch for changes and save to LocalStorage
   watch(jobs, (newJobs) => {
@@ -187,7 +213,24 @@ export const useJobStore = defineStore('jobs', () => {
   }
 
   const getJobById = (id) => {
-    return jobs.value.find(j => j.id === parseInt(id))
+    console.log('getJobById search started for ID:', id, 'Type:', typeof id);
+    if (!id) return undefined;
+    
+    const searchId = String(id).trim();
+    let found = jobs.value.find(j => String(j.id).trim() === searchId);
+    
+    // Fallback mechanism: if somehow state was cleared but the user wants a mock job
+    if (!found) {
+      console.warn('Job not found in reactive state, checking mock data directly...');
+      found = initialData.find(j => String(j.id).trim() === searchId);
+    }
+    
+    if (found) {
+      console.log('getJobById found job:', found.title);
+    } else {
+      console.log('getJobById did NOT find job. Available IDs:', jobs.value.map(j => j.id));
+    }
+    return found;
   }
 
   return {

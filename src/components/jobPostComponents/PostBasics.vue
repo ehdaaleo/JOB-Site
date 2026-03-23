@@ -10,6 +10,11 @@ const workTypes = [
   { label: 'On-site', value: 'on-site' },
   { label: 'Hybrid', value: 'hybrid' },
 ]
+const jobTypes = [
+  { label: 'Full-time', value: 'Full-time' },
+  { label: 'Part-time', value: 'Part-time' },
+  { label: 'Freelance', value: 'Freelance' },
+]
 </script>
 
 <template>
@@ -46,6 +51,18 @@ const workTypes = [
           <span class="absolute right-[12px] top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-[12px]">▾</span>
         </div>
         <p v-if="errors.work_type" class="text-red-500 text-[14px] font-medium mt-[2px]">{{ errors.work_type }}</p>
+      </div>
+
+      <div class="flex flex-col gap-[6px]">
+        <label class="text-[15px] font-semibold text-slate-700 tracking-[0.2px]">Job Type <span class="text-blue-600">*</span></label>
+        <div class="relative">
+          <select v-model="modelValue.type" class="appearance-none w-full bg-slate-50 border border-slate-200 rounded-lg text-slate-900 text-[16px] pl-[14px] pr-[30px] py-[10px] outline-none cursor-pointer transition-all duration-200 focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/15 focus:bg-white" :class="{ 'border-red-400 focus:border-red-500 focus:ring-red-500/15': errors.type }">
+            <option value="">Select type</option>
+            <option v-for="jt in jobTypes" :key="jt.value" :value="jt.value">{{ jt.label }}</option>
+          </select>
+          <span class="absolute right-[12px] top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-[12px]">▾</span>
+        </div>
+        <p v-if="errors.type" class="text-red-500 text-[14px] font-medium mt-[2px]">{{ errors.type }}</p>
       </div>
 
       <div class="flex flex-col gap-[6px]">

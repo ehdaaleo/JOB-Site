@@ -44,6 +44,7 @@ const form = ref({
   title: '',
   category_id: '',
   work_type: '',
+  type: '',
   location: '',
   application_deadline: '',
   experience_level: '',
@@ -53,6 +54,7 @@ const form = ref({
   benefits: [''],
   salary_min: null,
   salary_max: null,
+  salary_period: '',
   technologies: []
 })
 
@@ -116,6 +118,7 @@ const validateStep = (step) => {
     if (!form.value.title?.trim()) { errors.value.title = 'Job title is required'; isValid = false }
     if (!form.value.category_id) { errors.value.category_id = 'Category is required'; isValid = false }
     if (!form.value.work_type) { errors.value.work_type = 'Work type is required'; isValid = false }
+    if (!form.value.type) { errors.value.type = 'Job type is required'; isValid = false }
     if (!form.value.location?.trim()) { errors.value.location = 'Location is required'; isValid = false }
   } else if (step === 1) {
     if (!form.value.description?.trim()) { errors.value.description = 'Description is required'; isValid = false }
@@ -129,6 +132,7 @@ const validateStep = (step) => {
     if (!form.value.salary_min) { errors.value.salary_min = 'Min salary is required'; isValid = false }
     if (!form.value.salary_max) { errors.value.salary_max = 'Max salary is required'; isValid = false }
     else if (form.value.salary_min > form.value.salary_max) { errors.value.salary_max = 'Max salary must be greater than min salary'; isValid = false }
+    if (!form.value.salary_period) { errors.value.salary_period = 'Salary period is required'; isValid = false }
     
     if (form.value.technologies.length === 0) { errors.value.technologies = 'At least one technology is required'; isValid = false }
   }
@@ -211,9 +215,9 @@ const submitJob = () => {
       salaryMin: form.value.salary_min,
       salaryMax: form.value.salary_max,
       deadline: form.value.application_deadline,
-      type: 'full-time',
+      type: form.value.type,
       salaryCurrency: 'USD',
-      salaryPeriod: 'yearly',
+      salaryPeriod: form.value.salary_period,
       comments: []
     })
     

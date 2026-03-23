@@ -56,6 +56,24 @@ const toggleQuickTech = (t) => {
       </div>
 
       <div class="flex flex-col gap-[6px] md:col-span-2 mt-[6px]">
+        <label class="text-[15px] font-semibold text-slate-700 tracking-[0.2px]">Salary Period <span class="text-blue-600">*</span></label>
+        <div class="flex flex-wrap gap-[8px]">
+          <button
+            v-for="period in ['yearly', 'monthly', 'hourly']"
+            :key="period"
+            type="button"
+            class="px-[16px] py-[8px] rounded-full border text-[15px] font-medium transition-all duration-150 capitalize"
+            :class="{
+              'border-blue-600 bg-blue-50 text-blue-600 shadow-[0_2px_10px_rgba(37,99,235,0.1)]': modelValue.salary_period === period,
+              'border-slate-300 bg-white text-slate-600 hover:border-blue-400 hover:text-blue-500': modelValue.salary_period !== period
+            }"
+            @click="modelValue.salary_period = period"
+          >{{ period }}</button>
+        </div>
+        <p v-if="errors.salary_period" class="text-red-500 text-[14px] font-medium mt-[2px]">{{ errors.salary_period }}</p>
+      </div>
+
+      <div class="flex flex-col gap-[6px] md:col-span-2 mt-[6px]">
         <label class="text-[15px] font-semibold text-slate-700 tracking-[0.2px]">Required Technologies <span class="text-blue-600">*</span></label>
         <div class="flex gap-[10px]">
           <input

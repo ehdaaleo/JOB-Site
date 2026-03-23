@@ -14,9 +14,8 @@ const pinia = createPinia()
 
 app.use(pinia)
 
-// Initialize auth state from localStorage
+// Initialize auth state from localStorage and setup listeners
 const authStore = useAuthStore(pinia)
-authStore.initAuth()
 authStore.setupAuthListener()
 
 app.use(router)

@@ -1,5 +1,4 @@
 <script setup>
-import { RouterLink, RouterView } from 'vue-router'
 import Navigation from './components/Navigation.vue'
 </script>
 
@@ -9,4 +8,3 @@ import Navigation from './components/Navigation.vue'
     <RouterView />
   </div>
 </template>
-

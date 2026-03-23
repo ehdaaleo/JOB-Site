@@ -50,8 +50,8 @@ const createWrapper = () => {
 describe('RegisterView', () => {
   beforeEach(() => {
     localStorage.clear()
-    vi.resetAllMocks()
     setActivePinia(createPinia())
+    vi.clearAllMocks()
   })
 
   it('renders the component', () => {
@@ -125,10 +125,9 @@ describe('RegisterView', () => {
     routerPushSpy.mockRestore()
   })
 
-  it('shows alert on registration failure', async () => {
+  it('shows error on registration failure', async () => {
     const { wrapper, pinia } = createWrapper()
     const store = useAuthStore(pinia)
-    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {})
 
     vi.spyOn(store, 'register').mockResolvedValue({ success: false, error: 'Email already exists' })
 
@@ -136,8 +135,8 @@ describe('RegisterView', () => {
     registerForm.vm.$emit('submit', { name: 'New User', email: 'existing@example.com', password: 'password123', role: 'candidate' })
     await flushPromises()
 
-    expect(alertSpy).toHaveBeenCalledWith('Email already exists')
-    alertSpy.mockRestore()
+    // The error is now handled via toast, not alert
+    expect(store.error).toBe('Email already exists')
   })
 
   it('passes loading state to RegisterForm', async () => {

@@ -6,7 +6,7 @@ import router from '@/router'
 export const useAuthStore = defineStore('auth', () => {
   // State
   const user = ref(null)
-  const token = ref(localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token') || null)
+  const token = ref(null)
   const isLoading = ref(false)
   const error = ref(null)
   const rememberMe = ref(false)
@@ -15,26 +15,41 @@ export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = computed(() => !!token.value)
   const isLoggedIn = computed(() => !!user.value && !!token.value)
 
+  // Initialize token from storage on store creation
+  function initFromStorage() {
+    const storedToken = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token')
+    const storedUser = localStorage.getItem('user') || sessionStorage.getItem('user')
+
+    if (storedToken && storedUser) {
+      token.value = storedToken
+      user.value = JSON.parse(storedUser)
+      rememberMe.value = !!localStorage.getItem('auth_token')
+    }
+  }
+
+  // Call init on store creation
+  initFromStorage()
+
   // Watch for token changes and persist accordingly
   watch(token, (newToken) => {
-    if (newToken) {
-      if (rememberMe.value) {
-        localStorage.setItem('auth_token', newToken)
-      } else {
-        sessionStorage.setItem('auth_token', newToken)
-      }
+    if (!newToken) return
+    
+    if (rememberMe.value) {
+      localStorage.setItem('auth_token', newToken)
+    } else {
+      sessionStorage.setItem('auth_token', newToken)
     }
   })
 
   // Watch for user changes and persist
   watch(user, (newUser) => {
-    if (newUser) {
-      const userData = JSON.stringify(newUser)
-      if (rememberMe.value) {
-        localStorage.setItem('user', userData)
-      } else {
-        sessionStorage.setItem('user', userData)
-      }
+    if (!newUser) return
+    
+    const userData = JSON.stringify(newUser)
+    if (rememberMe.value) {
+      localStorage.setItem('user', userData)
+    } else {
+      sessionStorage.setItem('user', userData)
     }
   })
 
@@ -45,11 +60,10 @@ export const useAuthStore = defineStore('auth', () => {
     rememberMe.value = credentials.rememberMe || false
 
     try {
-      const { user: userData, token: authToken, rememberMe: shouldRemember } = await authApi.login(credentials)
-      
+      const { user: userData, token: authToken } = await authApi.login(credentials)
+
       user.value = userData
       token.value = authToken
-      rememberMe.value = shouldRemember
 
       // Persist based on rememberMe choice
       if (rememberMe.value) {
@@ -129,21 +143,9 @@ export const useAuthStore = defineStore('auth', () => {
       localStorage.removeItem('user')
       sessionStorage.removeItem('user')
       isLoading.value = false
-      
+
       // Redirect to login
       router.push('/auth/login')
-    }
-  }
-
-  // Initialize user from localStorage/sessionStorage on store creation
-  function initAuth() {
-    const storedToken = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token')
-    const storedUser = localStorage.getItem('user') || sessionStorage.getItem('user')
-
-    if (storedToken && storedUser) {
-      token.value = storedToken
-      user.value = JSON.parse(storedUser)
-      rememberMe.value = !!localStorage.getItem('auth_token')
     }
   }
 
@@ -186,14 +188,14 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const updatedUser = await authApi.updateUser(user.value.id, userData)
       user.value = updatedUser
-      
+
       // Persist updated user
       if (rememberMe.value) {
         localStorage.setItem('user', JSON.stringify(updatedUser))
       } else {
         sessionStorage.setItem('user', JSON.stringify(updatedUser))
       }
-      
+
       return { success: true, user: updatedUser }
     } catch (err) {
       error.value = err.message || 'Failed to update profile'
@@ -240,7 +242,7 @@ export const useAuthStore = defineStore('auth', () => {
     logout,
     forgotPassword,
     resetPassword,
-    initAuth,
+    initFromStorage,
     setupAuthListener,
     checkEmailExists,
     updateProfile,

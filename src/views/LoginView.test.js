@@ -85,10 +85,9 @@ describe('LoginView', () => {
     expect(loginSpy).toHaveBeenCalledWith({ email: 'test@example.com', password: 'password123' })
   })
 
-  it('shows alert on login failure', async () => {
+  it('sets error state on login failure', async () => {
     const { wrapper, pinia } = createWrapper()
     const store = useAuthStore(pinia)
-    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {})
 
     vi.spyOn(store, 'login').mockResolvedValue({ success: false, error: 'Invalid credentials' })
 
@@ -96,8 +95,7 @@ describe('LoginView', () => {
     loginForm.vm.$emit('submit', { email: 'wrong@example.com', password: 'wrong' })
     await flushPromises()
 
-    expect(alertSpy).toHaveBeenCalledWith('Invalid credentials')
-    alertSpy.mockRestore()
+    expect(store.error).toBe('Invalid credentials')
   })
 
   it('passes loading state to LoginForm', async () => {
@@ -117,7 +115,7 @@ describe('LoginView', () => {
     await wrapper.vm.$nextTick()
 
     expect(store.isLoading).toBe(true)
-    
+
     // Clean up - resolve the pending promise
     resolveLogin({ id: '1', name: 'Test User', email: 'test@example.com' })
   })

@@ -2,9 +2,10 @@
 const props = defineProps({
   currentStep: Number,
   steps: Array,
-  submitting: Boolean
+  submitting: Boolean,
+  hideSubmit: Boolean
 })
-const emit = defineEmits(['next', 'back', 'submit'])
+const emit = defineEmits(['next', 'back'])
 </script>
 
 <template>
@@ -33,16 +34,9 @@ const emit = defineEmits(['next', 'back', 'submit'])
         Continue →
       </button>
       
-      <button
-        v-else
-        type="button"
-        class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:opacity-90 border-none px-[28px] py-[10px] rounded-lg text-[16px] font-bold hover:-translate-y-px transition-all duration-200 min-w-[130px] flex items-center justify-center shadow-md disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-0"
-        :disabled="submitting"
-        @click="emit('submit')"
-      >
-        <span v-if="!submitting" class="flex gap-1.5 items-center"> Post Job</span>
-        <span v-else class="w-[18px] h-[18px] border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-      </button>
+      <span v-else-if="hideSubmit" class="text-[14px] text-slate-400 font-medium px-[28px] py-[10px]">
+        Complete payment to post your job
+      </span>
     </div>
   </div>
 </template>

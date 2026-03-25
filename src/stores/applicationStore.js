@@ -6,41 +6,44 @@ export const useApplicationStore = defineStore('applications', () => {
   const jobStore = useJobStore()
   
   const applications = ref([
-    { 
-      id: 1, 
+    {
+      id: 1,
       jobId: 1,
-      job: 'Senior Frontend Developer', 
-      company: 'TechCorp', 
-      location: 'San Francisco, CA', 
-      type: 'Remote', 
-      salary: '$120k - $160k', 
-      status: 'interviewing', 
-      date: '2024-01-10', 
-      coverLetter: 'I am excited to apply for this position because...' 
+      job: 'Senior Frontend Developer',
+      company: 'TechCorp',
+      candidateName: 'Sarah Johnson',
+      location: 'San Francisco, CA',
+      type: 'Remote',
+      salary: '$120k - $160k',
+      status: 'interviewing',
+      date: '2024-01-10',
+      coverLetter: 'I am excited to apply for this position because I have over 5 years of Vue.js experience and a deep passion for building accessible, performant interfaces.'
     },
-    { 
-      id: 2, 
+    {
+      id: 2,
       jobId: 2,
-      job: 'Backend Engineer', 
-      company: 'InnovateTech', 
-      location: 'New York, NY', 
-      type: 'Hybrid', 
-      salary: '$130k - $170k', 
-      status: 'pending', 
-      date: '2024-01-08', 
-      coverLetter: 'With my experience in backend development...' 
+      job: 'Backend Engineer',
+      company: 'InnovateTech',
+      candidateName: 'Michael Chen',
+      location: 'New York, NY',
+      type: 'Hybrid',
+      salary: '$130k - $170k',
+      status: 'pending',
+      date: '2024-01-08',
+      coverLetter: 'With my experience in backend development and distributed systems, I believe I can make a meaningful impact on your team.'
     },
-    { 
-      id: 3, 
+    {
+      id: 3,
       jobId: 3,
-      job: 'Product Manager', 
-      company: 'CloudSystems', 
-      location: 'Austin, TX', 
-      type: 'On-site', 
-      salary: '$110k - $150k', 
-      status: 'rejected', 
-      date: '2024-01-05', 
-      coverLetter: 'I am passionate about product management...' 
+      job: 'Product Manager',
+      company: 'CloudSystems',
+      candidateName: 'Emily Davis',
+      location: 'Austin, TX',
+      type: 'On-site',
+      salary: '$110k - $150k',
+      status: 'rejected',
+      date: '2024-01-05',
+      coverLetter: 'I am passionate about product management and have led cross-functional teams to deliver three major product launches in the past two years.'
     },
   ])
 

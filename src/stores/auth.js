@@ -105,6 +105,40 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  async function loginWithOAuth({ provider, code, redirectUri }) {
+    isLoading.value = true
+    error.value = null
+
+    try {
+      // In a real app, this would be a call to your backend
+      // which exchanges the code for a token and returns user info.
+      // For this demo, we'll mock the backend behavior.
+      console.log(`Exchanging ${provider} code for token...`, { code, redirectUri })
+
+      // MOCK BACKEND CALL
+      // const response = await authApi.loginWithOAuth({ provider, code, redirectUri })
+      // const { user: userData, token: authToken } = response
+
+      // For now, let's just log it and simulate a failure or successful redirect
+      // since we don't have a real backend to exchange the code.
+      throw new Error(
+        'Social login backend not implemented yet. Token exchange must happen server-side.',
+      )
+
+      // THE FOLLOWING IS WHAT WOULD HAPPEN ON SUCCESS:
+      // user.value = userData
+      // token.value = authToken
+      // localStorage.setItem('auth_token', authToken)
+      // saveUserToStorage(userData, true)
+      // return { success: true, user: userData }
+    } catch (err) {
+      error.value = err.message || 'Social login failed'
+      return { success: false, error: error.value }
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   async function register(userData) {
     isLoading.value = true
     error.value = null
@@ -269,6 +303,7 @@ export const useAuthStore = defineStore('auth', () => {
     checkEmailExists,
     updateProfile,
     verifyEmail,
+    loginWithOAuth,
     clearError,
   }
 })

@@ -1,0 +1,19 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "words": [],
+  "ignorePaths": [
+    "node_modules",
+    "dist",
+    "db.json"
+  ],
+  "patterns": [
+    {
+      "name": "random-tokens",
+      "pattern": "[a-zA-Z0-9]{32,}"
+    }
+  ],
+  "ignoreRegExpList": [
+    "random-tokens"
+  ]
+}

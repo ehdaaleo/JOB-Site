@@ -1,6 +1,8 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useJobStore } from '../stores/jobStore'
+import Navbar from '@/components/homePageComponents/navbar.vue'
+import Footer from '@/components/homePageComponents/footer.vue'
 
 const jobStore = useJobStore()
 const jobs = computed(() => jobStore.activeJobs)
@@ -51,6 +53,8 @@ const getWorkTypeClass = (type) => {
 
 <template>
   <div class="jobs-list-view">
+    <Navbar />
+    
     <!-- Header -->
     <div class="bg-white border-b border-gray-200 px-6 py-4">
       <div>
@@ -143,6 +147,8 @@ const getWorkTypeClass = (type) => {
         <p class="text-gray-500">Try adjusting your search or filters.</p>
       </div>
     </div>
+
+    <Footer />
   </div>
 </template>
 

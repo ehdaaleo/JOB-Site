@@ -90,7 +90,7 @@ const formatDate = (dateString) => {
         <div class="bg-white rounded-xl border border-gray-200">
           <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
             <h2 class="text-lg font-semibold text-gray-900">My Job Postings</h2>
-            <a href="/employer/jobs" class="text-sm text-blue-600 hover:text-blue-700">View All</a>
+            <a href="/employer/manage-jobs" class="text-sm text-blue-600 hover:text-blue-700">View All</a>
           </div>
           <div class="p-6">
             <div class="space-y-4">
@@ -161,7 +161,7 @@ const formatDate = (dateString) => {
             </div>
           </a>
           
-          <a href="/employer/jobs" class="flex items-center p-4 bg-white border border-gray-200 rounded-xl hover:border-blue-300 hover:shadow-md transition-all">
+          <a href="/employer/manage-jobs" class="flex items-center p-4 bg-white border border-gray-200 rounded-xl hover:border-blue-300 hover:shadow-md transition-all">
             <div class="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center mr-4">
               <svg class="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />

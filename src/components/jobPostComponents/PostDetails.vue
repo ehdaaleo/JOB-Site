@@ -17,25 +17,31 @@ const addBen = () => props.modelValue.benefits.push('')
 const removeBen = (i) => props.modelValue.benefits.splice(i, 1)
 
 const handleAIGenerated = (result) => {
+  // Create updated form data with all AI-generated fields
+  const updatedForm = { ...props.modelValue }
+  
   // Update description
   if (result.description) {
-    emit('update:modelValue', { ...props.modelValue, description: result.description })
+    updatedForm.description = result.description
   }
   
   // Update responsibilities if we have an array
   if (result.responsibilities && Array.isArray(result.responsibilities)) {
-    emit('update:modelValue', { ...props.modelValue, responsibilities: result.responsibilities })
+    updatedForm.responsibilities = result.responsibilities
   }
   
   // Update requirements if we have an array
   if (result.requirements && Array.isArray(result.requirements)) {
-    emit('update:modelValue', { ...props.modelValue, requirements: result.requirements })
+    updatedForm.requirements = result.requirements
   }
   
   // Update benefits if we have an array
   if (result.benefits && Array.isArray(result.benefits)) {
-    emit('update:modelValue', { ...props.modelValue, benefits: result.benefits })
+    updatedForm.benefits = result.benefits
   }
+  
+  // Emit all updates at once
+  emit('update:modelValue', updatedForm)
 }
 </script>
 

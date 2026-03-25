@@ -41,7 +41,7 @@ Format the output as valid JSON only, without any markdown formatting.
       const response = await axios.post(
         'https://api.groq.com/openai/v1/chat/completions',
         {
-          model: 'llama-3.1-70b-versatile',
+          model: 'llama-3.3-70b-versatile',
           messages: [
             {
               role: 'system',
@@ -68,7 +68,9 @@ Format the output as valid JSON only, without any markdown formatting.
       // Try to parse the JSON response
       let parsedContent
       try {
-        parsedContent = JSON.parse(content)
+        // Remove markdown code blocks if present
+        const cleanContent = content.replace(/^```json\n/, '').replace(/\n```$/, '').replace(/^```/, '').replace(/```$/, '')
+        parsedContent = JSON.parse(cleanContent)
       } catch (parseError) {
         // If direct parse fails, try to extract JSON from the response
         const jsonMatch = content.match(/\{[\s\S]*\}/)
@@ -115,7 +117,7 @@ Keep it 2-3 paragraphs, professional, and focused on what makes the company a gr
       const response = await axios.post(
         'https://api.groq.com/openai/v1/chat/completions',
         {
-          model: 'llama-3.1-70b-versatile',
+          model: 'llama-3.3-70b-versatile',
           messages: [
             {
               role: 'system',

@@ -15,5 +15,12 @@ export default defineConfig({
   },
   server: {
     allowedHosts: ['nonabidingly-siziest-nathaly.ngrok-free.dev'],
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '')
+      }
+    }
   },
 })

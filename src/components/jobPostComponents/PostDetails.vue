@@ -64,7 +64,7 @@ const handleAIGenerated = (result) => {
         <label class="text-[15px] font-semibold text-slate-700 tracking-[0.2px]">Responsibilities <span class="text-blue-600">*</span></label>
         <div class="flex flex-col gap-[8px]">
           <div v-for="(item, i) in modelValue.responsibilities" :key="i" class="flex items-start gap-[8px]">
-            <input v-model="modelValue.responsibilities[i]" placeholder="Lead frontend architecture..." class="w-full bg-slate-50 border border-slate-200 rounded-lg text-slate-900 text-[16px] px-[14px] py-[10px] outline-none transition-all duration-200 focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/15 focus:bg-white placeholder:text-slate-400" />
+            <input v-model="modelValue.responsibilities[i]" placeholder="Lead frontend architecture..." aria-label="Responsibility" class="w-full bg-slate-50 border border-slate-200 rounded-lg text-slate-900 text-[16px] px-[14px] py-[10px] outline-none transition-all duration-200 focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/15 focus:bg-white placeholder:text-slate-400" />
             <button v-if="modelValue.responsibilities.length > 1" type="button" @click="removeRes(i)" class="w-[42px] h-[42px] bg-red-50 text-red-500 rounded-lg border border-red-100 flex items-center justify-center hover:bg-red-100 transition-colors shrink-0">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
             </button>
@@ -81,7 +81,7 @@ const handleAIGenerated = (result) => {
         <label class="text-[15px] font-semibold text-slate-700 tracking-[0.2px]">Requirements <span class="text-blue-600">*</span></label>
         <div class="flex flex-col gap-[8px]">
           <div v-for="(item, i) in modelValue.requirements" :key="i" class="flex items-start gap-[8px]">
-            <input v-model="modelValue.requirements[i]" placeholder="3+ years Vue.js experience..." class="w-full bg-slate-50 border border-slate-200 rounded-lg text-slate-900 text-[16px] px-[14px] py-[10px] outline-none transition-all duration-200 focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/15 focus:bg-white placeholder:text-slate-400" />
+            <input v-model="modelValue.requirements[i]" placeholder="3+ years Vue.js experience..." aria-label="Requirement" class="w-full bg-slate-50 border border-slate-200 rounded-lg text-slate-900 text-[16px] px-[14px] py-[10px] outline-none transition-all duration-200 focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/15 focus:bg-white placeholder:text-slate-400" />
             <button v-if="modelValue.requirements.length > 1" type="button" @click="removeReq(i)" class="w-[42px] h-[42px] bg-red-50 text-red-500 rounded-lg border border-red-100 flex items-center justify-center hover:bg-red-100 transition-colors shrink-0">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
             </button>
@@ -98,7 +98,7 @@ const handleAIGenerated = (result) => {
         <label class="text-[15px] font-semibold text-slate-700 tracking-[0.2px]">Benefits</label>
         <div class="flex flex-col gap-[8px]">
           <div v-for="(item, i) in modelValue.benefits" :key="i" class="flex items-start gap-[8px]">
-            <input v-model="modelValue.benefits[i]" placeholder="Health insurance, remote work..." class="w-full bg-slate-50 border border-slate-200 rounded-lg text-slate-900 text-[16px] px-[14px] py-[10px] outline-none transition-all duration-200 focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/15 focus:bg-white placeholder:text-slate-400" />
+            <input v-model="modelValue.benefits[i]" placeholder="Health insurance, remote work..." aria-label="Benefit" class="w-full bg-slate-50 border border-slate-200 rounded-lg text-slate-900 text-[16px] px-[14px] py-[10px] outline-none transition-all duration-200 focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/15 focus:bg-white placeholder:text-slate-400" />
             <button v-if="modelValue.benefits.length > 1" type="button" @click="removeBen(i)" class="w-[42px] h-[42px] bg-red-50 text-red-500 rounded-lg border border-red-100 flex items-center justify-center hover:bg-red-100 transition-colors shrink-0">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
             </button>

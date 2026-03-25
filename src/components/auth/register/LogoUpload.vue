@@ -1,11 +1,14 @@
 <template>
   <div class="space-y-5">
     <div>
-      <label class="block text-sm font-medium text-gray-900">Upload company logo</label>
+      <label class="block text-sm font-medium text-gray-900">Upload company logo <span class="text-red-500">*</span></label>
       <div class="mt-2">
         <div
           class="relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 px-6 py-10 text-center hover:border-gray-400"
-          :class="{ 'border-violet-500 bg-violet-50': isDragging }"
+          :class="[
+            { 'border-violet-500 bg-violet-50': isDragging },
+            errors.logo ? 'border-red-500 bg-red-50' : ''
+          ]"
           @dragover.prevent="isDragging = true"
           @dragleave="isDragging = false"
           @drop.prevent="handleDrop"
@@ -60,6 +63,9 @@
             Remove
           </button>
         </div>
+
+        <!-- Error message -->
+        <p v-if="errors.logo" class="mt-1 text-sm text-red-600" role="alert">{{ errors.logo }}</p>
       </div>
     </div>
 
@@ -87,7 +93,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, reactive } from 'vue'
 
 const props = defineProps({
   form: {
@@ -102,6 +108,10 @@ const isDragging = ref(false)
 const fileInput = ref(null)
 const logoPreview = ref(null)
 
+const errors = reactive({
+  logo: ''
+})
+
 const handleFileSelect = (event) => {
   const file = event.target.files[0]
   if (file) {
@@ -115,16 +125,25 @@ const handleDrop = (event) => {
   if (file && file.type.startsWith('image/')) {
     handleFile(file)
   } else {
-    alert('Please drop an image file')
+    errors.logo = 'Please drop an image file (PNG, JPG, GIF)'
   }
 }
 
 const handleFile = (file) => {
   const maxSize = 2 * 1024 * 1024 // 2MB
   if (file.size > maxSize) {
-    alert('File size must be less than 2MB')
+    errors.logo = 'File size must be less than 2MB'
     return
   }
+  
+  // Check if it's a valid image type
+  const validTypes = ['image/png', 'image/jpeg', 'image/gif']
+  if (!validTypes.includes(file.type)) {
+    errors.logo = 'Please upload a PNG, JPG, or GIF file'
+    return
+  }
+  
+  errors.logo = ''
   emit('file-change', file, 'logo')
   logoPreview.value = URL.createObjectURL(file)
 }
@@ -132,10 +151,24 @@ const handleFile = (file) => {
 const removeLogo = () => {
   emit('remove', 'logo')
   logoPreview.value = null
+  errors.logo = ''
   if (fileInput.value) {
     fileInput.value.value = ''
   }
 }
 
-defineExpose({ logoPreview })
+const validateLogo = () => {
+  if (!props.form.logo) {
+    errors.logo = 'Company logo is required'
+    return false
+  }
+  errors.logo = ''
+  return true
+}
+
+defineExpose({
+  logoPreview,
+  validateLogo,
+  errors
+})
 </script>

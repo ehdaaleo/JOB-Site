@@ -2,9 +2,18 @@
 import { ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useAuth0 } from '@auth0/auth0-vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const { logout, isAuthenticated: isAuth0Authenticated } = useAuth0()
+
+const handleLogout = () => {
+  if (isAuth0Authenticated.value) {
+    logout({ logoutParams: { returnTo: window.location.origin } })
+  }
+  authStore.logout()
+}
 const isMenuOpen = ref(false)
 const isScrolled = ref(false)
 
@@ -56,7 +65,7 @@ const navLinks = [
             >
               Dashboard
             </RouterLink>
-            <button class="text-sm font-medium px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors" @click="authStore.logout()">
+            <button class="text-sm font-medium px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors" @click="handleLogout">
               Log out
             </button>
           </template>
@@ -89,7 +98,7 @@ const navLinks = [
           <div class="h-px bg-gray-200 my-1"></div>
           <template v-if="authStore.isAuthenticated">
             <RouterLink :to="`/${authStore.user?.role || 'candidate'}/dashboard`" class="px-3 py-2 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-50 text-left" @click="isMenuOpen = false">Dashboard</RouterLink>
-            <button class="px-3 py-2 text-sm font-medium text-red-600 rounded-lg hover:bg-red-50 text-left" @click="authStore.logout(); isMenuOpen = false">Log out</button>
+            <button class="px-3 py-2 text-sm font-medium text-red-600 rounded-lg hover:bg-red-50 text-left" @click="handleLogout(); isMenuOpen = false">Log out</button>
           </template>
           <template v-else>
             <button class="px-3 py-2 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-50 text-left" @click="router.push('/login'); isMenuOpen = false">Log in</button>

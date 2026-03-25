@@ -2,45 +2,58 @@
   <div class="space-y-5">
     <h2 class="text-lg font-semibold text-gray-900">Profile Information</h2>
 
-    <!-- Headline field container -->
+    <!-- Headline field -->
     <div>
-      <label for="headline" class="block text-sm font-medium text-gray-900">Professional headline</label>
+      <label for="headline" class="block text-sm font-medium text-gray-900">Professional headline <span class="text-red-500">*</span></label>
       <div class="mt-1">
         <input
           id="headline"
           v-model="form.headline"
           type="text"
-          required
-          class="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600"
+          class="block w-full rounded-md border px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600"
+          :class="errors.headline ? 'border-red-500 focus:outline-red-600' : 'border-gray-300 focus:outline-indigo-600'"
           placeholder="e.g., Senior Software Engineer"
+          @blur="validateHeadline"
+          @input="clearError('headline')"
+          aria-invalid="errors.headline ? 'true' : 'false'"
+          :aria-describedby="errors.headline ? 'headline-error' : undefined"
         />
       </div>
+      <p v-if="errors.headline" id="headline-error" class="mt-1 text-sm text-red-600" role="alert">{{ errors.headline }}</p>
     </div>
 
-    <!-- Skills field container -->
+    <!-- Skills field -->
     <div>
-      <label for="skills" class="block text-sm font-medium text-gray-900">Skills (comma separated)</label>
+      <label for="skills" class="block text-sm font-medium text-gray-900">Skills (comma separated) <span class="text-red-500">*</span></label>
       <div class="mt-1">
         <input
           id="skills"
           v-model="form.skills"
           type="text"
-          required
-          class="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600"
+          class="block w-full rounded-md border px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600"
+          :class="errors.skills ? 'border-red-500 focus:outline-red-600' : 'border-gray-300 focus:outline-indigo-600'"
           placeholder="e.g., JavaScript, Vue.js, Node.js"
+          @blur="validateSkills"
+          @input="clearError('skills')"
+          aria-invalid="errors.skills ? 'true' : 'false'"
+          :aria-describedby="errors.skills ? 'skills-error' : undefined"
         />
       </div>
+      <p v-if="errors.skills" id="skills-error" class="mt-1 text-sm text-red-600" role="alert">{{ errors.skills }}</p>
     </div>
 
-    <!-- Experience field container -->
+    <!-- Experience field -->
     <div>
-      <label for="experience" class="block text-sm font-medium text-gray-900">Years of experience</label>
+      <label for="experience" class="block text-sm font-medium text-gray-900">Years of experience <span class="text-red-500">*</span></label>
       <div class="mt-1">
         <select
           id="experience"
           v-model="form.experience"
-          required
-          class="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600"
+          class="block w-full rounded-md border px-3 py-2 text-sm text-gray-900 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600"
+          :class="errors.experience ? 'border-red-500 focus:outline-red-600' : 'border-gray-300 focus:outline-indigo-600'"
+          @change="validateExperience"
+          aria-invalid="errors.experience ? 'true' : 'false'"
+          :aria-describedby="errors.experience ? 'experience-error' : undefined"
         >
           <option value="">Select experience level</option>
           <option value="0-1">0-1 years (Entry level)</option>
@@ -50,6 +63,7 @@
           <option value="10+">10+ years (Expert)</option>
         </select>
       </div>
+      <p v-if="errors.experience" id="experience-error" class="mt-1 text-sm text-red-600" role="alert">{{ errors.experience }}</p>
     </div>
 
     <!-- Resume upload container -->
@@ -87,12 +101,13 @@
           </div>
         </div>
       </div>
+      <p v-if="errors.resume" class="mt-1 text-sm text-red-600" role="alert">{{ errors.resume }}</p>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, reactive } from 'vue'
 
 const props = defineProps({
   form: {
@@ -105,6 +120,74 @@ const emit = defineEmits(['file-change'])
 
 const isDragging = ref(false)
 const fileInput = ref(null)
+
+const errors = reactive({
+  headline: '',
+  skills: '',
+  experience: '',
+  resume: ''
+})
+
+// Text validation: at least 3 chars, letters/spaces/hyphens only
+const validateText = (value, fieldName, minLength = 3, maxLength = 100) => {
+  if (!value || value.trim() === '') {
+    return `${fieldName} is required`
+  }
+  if (value.trim().length < minLength) {
+    return `${fieldName} must be at least ${minLength} characters`
+  }
+  if (value.trim().length > maxLength) {
+    return `${fieldName} must not exceed ${maxLength} characters`
+  }
+  // Allow letters, spaces, hyphens, and commas (for skills)
+  const textRegex = /^[\p{L}][\p{L} \-,]{0,99}$/u
+  if (!textRegex.test(value)) {
+    return `${fieldName} can only contain letters, spaces, and hyphens`
+  }
+  if (/  +/.test(value)) {
+    return `${fieldName} cannot contain consecutive spaces`
+  }
+  if (/--/.test(value)) {
+    return `${fieldName} cannot contain consecutive hyphens`
+  }
+  if (/^[ \-]|[ \-]$/.test(value)) {
+    return `${fieldName} cannot start or end with a space or hyphen`
+  }
+  return ''
+}
+
+const validateHeadline = () => {
+  const error = validateText(props.form.headline, 'Headline', 3, 100)
+  errors.headline = error
+  return !error
+}
+
+const validateSkills = () => {
+  if (!props.form.skills || props.form.skills.trim() === '') {
+    errors.skills = 'Skills are required'
+    return false
+  }
+  const skillsArray = props.form.skills.split(',').map(s => s.trim()).filter(s => s)
+  if (skillsArray.length < 2) {
+    errors.skills = 'Please enter at least 2 skills'
+    return false
+  }
+  if (props.form.skills.length > 500) {
+    errors.skills = 'Skills must not exceed 500 characters'
+    return false
+  }
+  errors.skills = ''
+  return true
+}
+
+const validateExperience = () => {
+  if (!props.form.experience) {
+    errors.experience = 'Please select your experience level'
+    return false
+  }
+  errors.experience = ''
+  return true
+}
 
 const handleFileSelect = (event) => {
   const file = event.target.files[0]
@@ -119,7 +202,7 @@ const handleDrop = (event) => {
   if (file && isValidResumeType(file)) {
     handleFile(file)
   } else {
-    alert('Please drop a valid file (PDF, DOC, DOCX)')
+    errors.resume = 'Please drop a valid file (PDF, DOC, DOCX)'
   }
 }
 
@@ -132,9 +215,24 @@ const isValidResumeType = (file) => {
 const handleFile = (file) => {
   const maxSize = 5 * 1024 * 1024 // 5MB
   if (file.size > maxSize) {
-    alert('File size must be less than 5MB')
+    errors.resume = 'File size must be less than 5MB'
     return
   }
+  errors.resume = ''
   emit('file-change', file, 'resume')
 }
+
+const clearError = (field) => {
+  if (errors[field]) {
+    errors[field] = ''
+  }
+}
+
+defineExpose({
+  validateHeadline,
+  validateSkills,
+  validateExperience,
+  errors,
+  isValid: () => !errors.headline && !errors.skills && !errors.experience
+})
 </script>

@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -35,6 +36,12 @@ const router = createRouter({
           path: 'reset-password',
           name: 'reset-password',
           component: () => import('../views/ResetPasswordView.vue'),
+          meta: { guestOnly: true },
+        },
+        {
+          path: 'callback/:provider',
+          name: 'oauth-callback',
+          component: () => import('../views/auth/OAuthCallback.vue'),
           meta: { guestOnly: true },
         },
       ],
@@ -176,12 +183,11 @@ const router = createRouter({
   },
 })
 
-// Navigation Guards - using return pattern instead of next()
+// Navigation Guards
 router.beforeEach((to, from) => {
-  const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token')
-  const userStr = localStorage.getItem('user') || sessionStorage.getItem('user')
-  const user = userStr ? JSON.parse(userStr) : null
-  const isAuthenticated = !!token && !!user
+  const authStore = useAuthStore()
+  const user = authStore.user
+  const isAuthenticated = authStore.isAuthenticated
 
   // Helper function to get redirect path based on role
   const getRoleRedirect = () => {

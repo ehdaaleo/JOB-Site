@@ -109,6 +109,11 @@ const router = createRouter({
           name: 'company-settings',
           component: () => import('../views/employer/CompanySettingsView.vue'),
         },
+        {
+          path: 'payments',
+          name: 'payment-history',
+          component: () => import('../views/employer/PaymentHistoryView.vue'),
+        },
       ],
     },
     // Candidate Routes

@@ -65,6 +65,14 @@ const navLinks = [
             >
               Dashboard
             </RouterLink>
+            <!-- Post Job Button for Employers -->
+            <RouterLink 
+              v-if="authStore.user?.role === 'employer'"
+              to="/employer/job-post"
+              class="text-sm font-medium px-4 py-2 bg-linear-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:opacity-90 transition-opacity mr-2"
+            >
+              Post Job
+            </RouterLink>
             <button class="text-sm font-medium px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors" @click="handleLogout">
               Log out
             </button>
@@ -98,6 +106,15 @@ const navLinks = [
           <div class="h-px bg-gray-200 my-1"></div>
           <template v-if="authStore.isAuthenticated">
             <RouterLink :to="`/${authStore.user?.role || 'candidate'}/dashboard`" class="px-3 py-2 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-50 text-left" @click="isMenuOpen = false">Dashboard</RouterLink>
+            <!-- Post Job for Mobile Employers -->
+            <RouterLink 
+              v-if="authStore.user?.role === 'employer'"
+              to="/employer/job-post" 
+              class="px-3 py-2 text-sm font-medium text-blue-600 rounded-lg hover:bg-blue-50 text-left" 
+              @click="isMenuOpen = false"
+            >
+              Post Job
+            </RouterLink>
             <button class="px-3 py-2 text-sm font-medium text-red-600 rounded-lg hover:bg-red-50 text-left" @click="handleLogout(); isMenuOpen = false">Log out</button>
           </template>
           <template v-else>

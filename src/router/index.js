@@ -196,6 +196,11 @@ const router = createRouter({
       component: () => import('../views/ApplyJobView.vue'),
       props: true,
     },
+    {
+      path: '/access-denied',
+      name: 'access-denied',
+      component: () => import('../views/AccessDeniedView.vue'),
+    },
     // 404 Route
     {
       path: '/:pathMatch(.*)*',
@@ -238,7 +243,7 @@ router.beforeEach((to, from) => {
 
     // Check role-based access
     if (to.meta.role && user?.role !== to.meta.role) {
-      return getRoleRedirect()
+      return { name: 'access-denied' }
     }
   }
 

@@ -36,7 +36,7 @@ const handleGenerate = async () => {
     type="button"
     :disabled="disabled || loading"
     @click="handleGenerate"
-    class="px-3 py-1.5 text-sm font-medium bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-md hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 transition-all duration-200 shadow-sm hover:shadow"
+    class="px-3 py-1.5 text-sm font-medium bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-md hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 transition-all duration-200 shadow-sm hover:shadow"
   >
     <svg v-if="loading" class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
       <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -46,6 +46,6 @@ const handleGenerate = async () => {
       <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
     </svg>
     <span v-if="loading">Generating...</span>
-    <span v-else>AI Generate</span>
+    <span v-else>AI Generate All</span>
   </button>
 </template>

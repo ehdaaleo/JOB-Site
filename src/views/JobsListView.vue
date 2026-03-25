@@ -1,6 +1,8 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useJobStore } from '../stores/jobStore'
+import Navbar from '@/components/homePageComponents/navbar.vue'
+import Footer from '@/components/homePageComponents/footer.vue'
 
 const jobStore = useJobStore()
 const jobs = computed(() => jobStore.activeJobs)
@@ -51,6 +53,8 @@ const getWorkTypeClass = (type) => {
 
 <template>
   <div class="jobs-list-view">
+    <Navbar />
+    
     <!-- Header -->
     <div class="bg-white border-b border-gray-200 px-6 py-4">
       <div>
@@ -91,43 +95,48 @@ const getWorkTypeClass = (type) => {
       </div>
 
       <!-- Jobs List -->
-      <div class="space-y-4">
-        <div v-for="job in filteredJobs" :key="job.id" class="bg-white rounded-xl border border-gray-200 p-6 hover:border-blue-300 transition-colors">
-          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            <div class="flex-1">
-              <div class="flex items-center gap-3 mb-2">
-                <h3 class="text-lg font-semibold text-gray-900">{{ job.title }}</h3>
-                <span v-if="job.featured" class="text-xs px-2 py-1 bg-blue-100 text-blue-600 rounded-full font-medium">Featured</span>
-                <span :class="`text-xs px-2 py-1 rounded-full font-medium ${getWorkTypeClass(job.workType)}`">{{ job.workType }}</span>
-              </div>
-              <p class="text-sm text-gray-600 mb-2">{{ job.company.name }}</p>
-              <div class="flex flex-wrap gap-4 text-sm text-gray-500">
-                <span class="flex items-center gap-1">
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  </svg>
-                  {{ job.location }}
-                </span>
-                <span class="flex items-center gap-1">
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  {{ formatSalary(job.salaryMin, job.salaryMax) }}
-                </span>
-                <span class="flex items-center gap-1">
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  {{ timeAgo(job.postedAt) }}
-                </span>
-              </div>
-              <div class="flex flex-wrap gap-2 mt-3">
-                <span v-for="skill in job.skills.slice(0, 5)" :key="skill" class="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded">
-                  {{ skill }}
-                </span>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div v-for="job in filteredJobs" :key="job.id" class="bg-white rounded-xl border border-gray-200 p-4 hover:border-blue-300 transition-colors">
+          <div class="flex flex-col gap-3">
+            <div class="flex items-start justify-between">
+              <div class="flex-1">
+                <div class="flex items-center gap-2 mb-1 flex-wrap">
+                  <h3 class="text-base font-semibold text-gray-900">{{ job.title }}</h3>
+                  <span v-if="job.featured" class="text-xs px-2 py-0.5 bg-blue-100 text-blue-600 rounded-full font-medium">Featured</span>
+                </div>
+                <p class="text-sm text-gray-600 mb-2">{{ job.company.name }}</p>
+                <span :class="`text-xs px-2 py-0.5 rounded-full font-medium ${getWorkTypeClass(job.workType)}`">{{ job.workType }}</span>
               </div>
             </div>
-            <RouterLink :to="`/jobs/${job.id}`" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm whitespace-nowrap">
+            <div class="flex flex-wrap gap-3 text-xs text-gray-500">
+              <span class="flex items-center gap-1">
+                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                </svg>
+                {{ job.location }}
+              </span>
+              <span class="flex items-center gap-1">
+                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {{ formatSalary(job.salaryMin, job.salaryMax) }}
+              </span>
+              <span class="flex items-center gap-1">
+                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {{ timeAgo(job.postedAt) }}
+              </span>
+            </div>
+            <div class="flex flex-wrap gap-1 mt-1">
+              <span v-for="skill in job.skills.slice(0, 3)" :key="skill" class="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded">
+                {{ skill }}
+              </span>
+              <span v-if="job.skills.length > 3" class="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded">
+                +{{ job.skills.length - 3 }}
+              </span>
+            </div>
+            <RouterLink :to="`/jobs/${job.id}`" class="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm text-center">
               Apply Now
             </RouterLink>
           </div>
@@ -143,6 +152,8 @@ const getWorkTypeClass = (type) => {
         <p class="text-gray-500">Try adjusting your search or filters.</p>
       </div>
     </div>
+
+    <Footer />
   </div>
 </template>
 

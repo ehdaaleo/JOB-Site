@@ -99,6 +99,17 @@ const router = createRouter({
           component: () => import('../views/employer/EmployerDashboardView.vue'),
         },
         {
+          path: 'manage-jobs',
+          name: 'manage-jobs',
+          component: () => import('../views/employer/ManageJobsView.vue'),
+        },
+        {
+          path: 'jobs/:id/edit',
+          name: 'edit-job',
+          component: () => import('../views/employer/PostJobView.vue'),
+          props: true,
+        },
+        {
           path: 'post-job',
           name: 'job-post',
           component: () => import('../views/employer/PostJobView.vue'),

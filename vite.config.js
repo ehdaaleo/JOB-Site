@@ -11,6 +11,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
+      '@auth0/auth0-vue': fileURLToPath(new URL('./node_modules/@auth0/auth0-vue/dist/lib/auth0-vue.cjs.js', import.meta.url))
     },
   },
   server: {

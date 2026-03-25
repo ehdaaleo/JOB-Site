@@ -8,9 +8,14 @@ const props = defineProps({
 
 const overviewRows = computed(() => [
   { 
-    label: 'Job type', 
+    label: 'Work arrangement', 
     value: props.job.work_type, 
     icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 14.15v4.25c0 1.035-.84 1.875-1.875 1.875H5.625a1.875 1.875 0 0 1-1.875-1.875v-4.25m16.5 0a2.18 2.18 0 0 0 .75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 0 0-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38a3.36 3.36 0 0 1-2.452-.181m3.125-7.825a2.18 2.18 0 0 0-3.037-3.037L4.35 15.152a2.18 2.18 0 0 0 3.037 3.037l12.863-12.863ZM5.625 10.5a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" /></svg>' 
+  },
+  { 
+    label: 'Job type', 
+    value: props.job.type || 'Full-time', 
+    icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>'
   },
   { 
     label: 'Experience', 
@@ -24,8 +29,7 @@ const overviewRows = computed(() => [
   },
   { 
     label: 'Salary', 
-    value: `${props.job.salary_min?.toLocaleString()} – ${props.job.salary_max?.toLocaleString()}`, 
-    isGreen: true, 
+    value: `$${props.job.salary_min?.toLocaleString()} – $${props.job.salary_max?.toLocaleString()} ${props.job.salary_period ? '/ ' + props.job.salary_period : ''}`, 
     icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>'
   },
   { 
@@ -53,7 +57,7 @@ const overviewRows = computed(() => [
           <div v-html="row.icon" class="w-3.5 h-3.5 opacity-70 text-blue-500"></div>
           {{ row.label }}
         </div>
-        <div class="font-medium text-slate-900 text-[15px] pl-6" :class="{ 'text-green-600': row.isGreen }">
+        <div class="font-medium text-slate-900 text-[15px] pl-6">
           {{ row.value }}
         </div>
       </div>

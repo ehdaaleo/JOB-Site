@@ -8,16 +8,46 @@ const router = createRouter({
       name: 'home',
       component: () => import('../views/HomeScreenView.vue'),
     },
+    // Auth Routes
+    {
+      path: '/auth',
+      component: () => import('../layouts/AuthLayout.vue'),
+      children: [
+        {
+          path: 'login',
+          name: 'login',
+          component: () => import('../views/LoginView.vue'),
+          meta: { guestOnly: true },
+        },
+        {
+          path: 'register',
+          name: 'register',
+          component: () => import('../views/RegisterView.vue'),
+          meta: { guestOnly: true },
+        },
+        {
+          path: 'forgot-password',
+          name: 'forgot-password',
+          component: () => import('../views/ForgotPasswordView.vue'),
+          meta: { guestOnly: true },
+        },
+        {
+          path: 'reset-password',
+          name: 'reset-password',
+          component: () => import('../views/ResetPasswordView.vue'),
+          meta: { guestOnly: true },
+        },
+      ],
+    },
     {
       path: '/login',
-      name: 'login',
-      component: () => import('../views/LoginView.vue'),
+      redirect: '/auth/login',
     },
     {
       path: '/register',
-      name: 'register',
-      component: () => import('../views/RegisterView.vue'),
+      redirect: '/auth/register',
     },
+    // Main Routes
     {
       path: '/jobs',
       name: 'jobs',
@@ -34,6 +64,19 @@ const router = createRouter({
       name: 'companies',
       component: () => import('../views/CompaniesView.vue'),
     },
+    // Protected Routes - Profile & Dashboard
+    {
+      path: '/profile',
+      name: 'profile',
+      component: () => import('../views/candidate/ProfileView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/dashboard',
+      name: 'dashboard',
+      component: () => import('../views/candidate/CandidateDashboardView.vue'),
+      meta: { requiresAuth: true },
+    },
     // Employer Routes
     {
       path: '/employer',
@@ -44,11 +87,11 @@ const router = createRouter({
           name: 'employer-dashboard',
           component: () => import('../views/employer/EmployerDashboardView.vue'),
         },
-       {
-      path: '/job-post',
-      name: 'job-post',
-      component: () => import('../views/employer/PostJobView.vue'),
-       },
+        {
+          path: 'job-post',
+          name: 'job-post',
+          component: () => import('../views/employer/PostJobView.vue'),
+        },
         {
           path: 'applications',
           name: 'view-applications',
@@ -78,7 +121,7 @@ const router = createRouter({
         },
         {
           path: 'profile',
-          name: 'profile',
+          name: 'candidate-profile',
           component: () => import('../views/candidate/ProfileView.vue'),
         },
         {
@@ -127,7 +170,7 @@ const router = createRouter({
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: () => import('../views/NotFoundView.vue'),
-    }
+    },
   ],
   scrollBehavior(to, from, savedPosition) {
     if (savedPosition) {
@@ -138,27 +181,46 @@ const router = createRouter({
   },
 })
 
-// Navigation Guards
-router.beforeEach((to, from, next) => {
-  // In production: check authentication and roles
-  // const authStore = useAuthStore()
-  
+// Navigation Guards - using return pattern instead of next()
+router.beforeEach((to, from) => {
+  const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token')
+  const userStr = localStorage.getItem('user') || sessionStorage.getItem('user')
+  const user = userStr ? JSON.parse(userStr) : null
+  const isAuthenticated = !!token && !!user
+
+  // Helper function to get redirect path based on role
+  const getRoleRedirect = () => {
+    if (!user?.role) return { name: 'home' }
+    if (user.role === 'candidate') return { name: 'candidate-dashboard' }
+    if (user.role === 'employer') return { name: 'employer-dashboard' }
+    if (user.role === 'admin') return { name: 'admin-dashboard' }
+    return { name: 'home' }
+  }
+
   // Check if route requires authentication
   if (to.meta.requiresAuth) {
-    // Would redirect to login if not authenticated
-    // if (!authStore.isAuthenticated) {
-    //   next({ name: 'login', query: { redirect: to.fullPath } })
-    //   return
-    // }
-    
+    if (!isAuthenticated) {
+      // Clear any orphaned storage data
+      localStorage.clear()
+      sessionStorage.clear()
+      return { name: 'login', query: { redirect: to.fullPath } }
+    }
+
     // Check role-based access
-    // if (to.meta.role && authStore.user?.role !== to.meta.role) {
-    //   next({ name: 'home' })
-    //   return
-    // }
+    if (to.meta.role && user?.role !== to.meta.role) {
+      return getRoleRedirect()
+    }
   }
-  
-  next()
+
+  // Check if route is for guests only (login, register)
+  if (to.meta.guestOnly) {
+    if (isAuthenticated) {
+      return getRoleRedirect()
+    }
+  }
+
+  // No redirect needed
+  return true
 })
 
 export default router

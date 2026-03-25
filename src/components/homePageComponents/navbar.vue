@@ -1,8 +1,10 @@
 <script setup>
 import { ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
+const authStore = useAuthStore()
 const isMenuOpen = ref(false)
 const isScrolled = ref(false)
 
@@ -25,7 +27,7 @@ const navLinks = [
       <div class="flex items-center justify-between w-full h-16">
         <!-- Logo -->
         <RouterLink to="/" class="flex items-center gap-2 no-underline">
-          <div class="w-9 h-9 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center">
+          <div class="w-9 h-9 rounded-lg bg-linear-to-r from-blue-600 to-indigo-600 flex items-center justify-center">
             <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5 text-white">
               <path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
@@ -47,12 +49,25 @@ const navLinks = [
 
         <!-- Auth -->
         <div class="hidden md:flex items-center gap-3">
-          <button class="text-sm font-medium text-gray-600 hover:text-gray-800" @click="router.push('/login')">
-            Log in
-          </button>
-          <button class="text-sm font-medium px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:opacity-90" @click="router.push('/register')">
-            Post a Job
-          </button>
+          <template v-if="authStore.isAuthenticated">
+            <RouterLink 
+              :to="`/${authStore.user?.role || 'candidate'}/dashboard`" 
+              class="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors mr-2"
+            >
+              Dashboard
+            </RouterLink>
+            <button class="text-sm font-medium px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors" @click="authStore.logout()">
+              Log out
+            </button>
+          </template>
+          <template v-else>
+            <button class="text-sm font-medium text-gray-600 hover:text-gray-800" @click="router.push('/login')">
+              Log in
+            </button>
+            <button class="text-sm font-medium px-4 py-2 bg-linear-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:opacity-90" @click="router.push('/register')">
+              Post a Job
+            </button>
+          </template>
         </div>
 
         <!-- Mobile -->
@@ -72,8 +87,14 @@ const navLinks = [
             {{ link.name }}
           </RouterLink>
           <div class="h-px bg-gray-200 my-1"></div>
-          <button class="px-3 py-2 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-50 text-left" @click="router.push('/login'); isMenuOpen = false">Log in</button>
-          <button class="px-3 py-2 text-sm font-medium bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg" @click="router.push('/register'); isMenuOpen = false">Post a Job</button>
+          <template v-if="authStore.isAuthenticated">
+            <RouterLink :to="`/${authStore.user?.role || 'candidate'}/dashboard`" class="px-3 py-2 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-50 text-left" @click="isMenuOpen = false">Dashboard</RouterLink>
+            <button class="px-3 py-2 text-sm font-medium text-red-600 rounded-lg hover:bg-red-50 text-left" @click="authStore.logout(); isMenuOpen = false">Log out</button>
+          </template>
+          <template v-else>
+            <button class="px-3 py-2 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-50 text-left" @click="router.push('/login'); isMenuOpen = false">Log in</button>
+            <button class="px-3 py-2 text-sm font-medium bg-linear-to-r from-blue-600 to-indigo-600 text-white rounded-lg" @click="router.push('/register'); isMenuOpen = false">Post a Job</button>
+          </template>
         </div>
       </div>
     </div>

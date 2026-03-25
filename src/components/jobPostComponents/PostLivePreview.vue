@@ -37,10 +37,11 @@ defineProps({
         </div>
 
         <div class="flex gap-[6px] flex-wrap mb-[12px]">
-          <span v-if="form.work_type" class="px-[10px] py-[3px] bg-blue-50 border border-blue-100 text-blue-600 rounded-full text-[13px] font-bold tracking-wide">{{ form.work_type }}</span>
+          <span v-if="form.work_type" class="px-[10px] py-[3px] bg-blue-50 border border-blue-100 text-blue-600 rounded-full text-[13px] font-bold tracking-wide capitalize">{{ form.work_type }}</span>
+          <span v-if="form.type" class="px-[10px] py-[3px] bg-blue-50 border border-blue-100 text-blue-600 rounded-full text-[13px] font-bold tracking-wide capitalize">{{ form.type }}</span>
           <span v-if="form.experience_level" class="px-[10px] py-[3px] bg-blue-50 border border-blue-100 text-blue-600 rounded-full text-[13px] font-bold tracking-wide">{{ form.experience_level }}</span>
           <span v-if="form.category_id" class="px-[10px] py-[3px] bg-slate-100 text-slate-600 rounded-full text-[13px] font-bold tracking-wide">{{ getCategoryName(form.category_id) }}</span>
-          <span v-if="!form.work_type && !form.experience_level" class="px-[10px] py-[3px] bg-slate-100 text-slate-500 rounded-full text-[13px] font-bold tracking-wide">—</span>
+          <span v-if="!form.work_type && !form.experience_level && !form.type" class="px-[10px] py-[3px] bg-slate-100 text-slate-500 rounded-full text-[13px] font-bold tracking-wide">—</span>
         </div>
 
         <div class="flex items-center gap-[4px] text-[14px] text-slate-500 font-medium mb-[10px] truncate"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>{{ form.location || 'Location' }}</div>
@@ -50,6 +51,7 @@ defineProps({
             ${{ form.salary_min ? form.salary_min.toLocaleString() : '?' }}
             –
             ${{ form.salary_max ? form.salary_max.toLocaleString() : '?' }}
+            <span v-if="form.salary_period" class="text-[13px] font-medium text-slate-500 ml-1">/ {{ form.salary_period }}</span>
           </span>
           <span v-else>Salary</span>
         </div>

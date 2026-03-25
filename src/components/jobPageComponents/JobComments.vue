@@ -24,7 +24,7 @@ const currentUser = ref({
   id: 'u1',
   name: 'Mostafa Ahmed',
   initials: 'MA',
-  role: 'Candidate'
+  role: 'candidate'
 });
 
 // state
@@ -41,6 +41,8 @@ const sortOptions = [
 ];
 const currentSortLabel = computed(() => sortOptions.find(o => o.value === sortBy.value)?.label || 'Most recent');
 const loadingMore = ref(false);
+const isDeleteModalOpen = ref(false);
+const commentToDeleteId = ref(null);
 
 const visibleCount = ref(3); // how many comments to show in first time
 
@@ -108,11 +110,23 @@ const postReply = (commentId) => {
 };
 
 const deleteComment = (id) => {
-  if (!job.value || !job.value.comments) return;
+  commentToDeleteId.value = id;
+  isDeleteModalOpen.value = true;
+};
+
+const confirmDelete = () => {
+  const id = commentToDeleteId.value;
+  if (!job.value || !job.value.comments || !id) return;
   const idx = job.value.comments.findIndex(c => c.id === id);
   if (idx !== -1) {
     job.value.comments.splice(idx, 1);
   }
+  closeDeleteModal();
+};
+
+const closeDeleteModal = () => {
+  isDeleteModalOpen.value = false;
+  commentToDeleteId.value = null;
 };
 
 const startEdit = (comment) => {
@@ -244,8 +258,38 @@ const loadMore = () => {
       <div
         v-for="comment in sortedComments"
         :key="comment.id"
-        class="flex gap-3 py-4 border-b border-slate-200 last:border-0"
+        class="group relative flex gap-3 py-4 border-b border-slate-200 last:border-0"
       >
+        <!--  Delete Confirmation  -->
+        <div 
+          v-if="commentToDeleteId === comment.id && isDeleteModalOpen" 
+          class="absolute inset-0 bg-white/95 backdrop-blur-[2px] z-20 flex items-center justify-center rounded-xl animate-in fade-in zoom-in-95 duration-200 px-4 text-center"
+        >
+          <div class="flex flex-col items-center gap-3">
+            <div class="flex items-center gap-2 text-red-600">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+              </svg>
+              <span class="text-[13px] font-bold">Do you want to delete comment?</span>
+            </div>
+            <div class="flex gap-2">
+              <button 
+                @click="closeDeleteModal" 
+                class="px-5 py-1.5 text-[11px] font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 rounded-full transition-colors"
+                type="button"
+              >
+                Cancel
+              </button>
+              <button 
+                @click="confirmDelete" 
+                class="px-5 py-1.5 text-[11px] font-bold text-white bg-red-600 hover:bg-red-700 rounded-full shadow-lg shadow-red-600/20 active:scale-95 transition-all"
+                type="button"
+              >
+                Confirm Delete
+              </button>
+            </div>
+          </div>
+        </div>
         <!-- image -->
         <div
           class="w-9 h-9 rounded-full text-white font-bold text-xs flex items-center justify-center shrink-0"
@@ -304,9 +348,9 @@ const loadMore = () => {
               Reply
             </button>
 
-            <!-- delete my comment only -->
+            <!-- delete my comment or if admin -->
             <button
-              v-if="isLoggedIn && comment.user.id === currentUser.id"
+              v-if="isLoggedIn && (comment.user.id === currentUser.id || currentUser.role === 'admin')"
               class="text-xs text-slate-400 px-2 py-1 rounded-md transition-colors hover:bg-red-50 hover:text-red-600 border border-transparent hover:border-red-200"
               @click="deleteComment(comment.id)"
             >
@@ -361,6 +405,8 @@ const loadMore = () => {
       <span v-if="!loadingMore">Load more comments</span>
       <span v-else class="w-4 h-4 border-2 border-slate-300 border-t-blue-600 rounded-full animate-spin flex"></span>
     </button>
+
+
 
   </div>
 </template>

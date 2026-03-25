@@ -37,6 +37,7 @@ const job = ref({
   experience_level: '',
   salary_min: 0,
   salary_max: 0,
+  salary_period: '',
   application_deadline: '',
   description: '',
   responsibilities: [],
@@ -59,11 +60,13 @@ const fetchJob = (id) => {
       company_logo: foundJob.company?.logo || 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSEgKtZiO3hayBevddOML4GOzKQYi-qX24gPg&s',
       company_verified: foundJob.company?.verified ?? true,
       work_type: foundJob.workType || '',
+      type: foundJob.type || '',
       posted_at: foundJob.postedAt || '',
       applications_count: foundJob.applicationsCount || 0,
       experience_level: foundJob.experienceLevel || '',
       salary_min: foundJob.salaryMin || 0,
       salary_max: foundJob.salaryMax || 0,
+      salary_period: foundJob.salaryPeriod || '',
       application_deadline: foundJob.deadline || '',
       // Convert strings to arrays if necessary
       responsibilities: typeof foundJob.responsibilities === 'string' 

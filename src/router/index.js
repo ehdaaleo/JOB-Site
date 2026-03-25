@@ -90,14 +90,22 @@ const router = createRouter({
       meta: { requiresAuth: true, role: 'employer' },
       children: [
         {
+          path: '',
+          redirect: '/employer/dashboard'
+        },
+        {
           path: 'dashboard',
           name: 'employer-dashboard',
           component: () => import('../views/employer/EmployerDashboardView.vue'),
         },
         {
-          path: 'job-post',
+          path: 'post-job',
           name: 'job-post',
           component: () => import('../views/employer/PostJobView.vue'),
+        },
+        {
+          path: 'job-post',
+          redirect: '/employer/post-job'
         },
         {
           path: 'applications',
@@ -115,6 +123,11 @@ const router = createRouter({
           component: () => import('../views/employer/PaymentHistoryView.vue'),
         },
       ],
+    },
+    // Standalone post-job route (accessible without /employer prefix for direct access)
+    {
+      path: '/post-job',
+      redirect: '/employer/post-job'
     },
     // Candidate Routes
     {

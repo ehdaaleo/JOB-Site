@@ -1,4 +1,6 @@
 <script setup>
+import AIGenerateButton from '@/components/ai/AIGenerateButton.vue'
+
 const props = defineProps({
   modelValue: Object,
   errors: Object
@@ -13,6 +15,28 @@ const removeReq = (i) => props.modelValue.requirements.splice(i, 1)
 
 const addBen = () => props.modelValue.benefits.push('')
 const removeBen = (i) => props.modelValue.benefits.splice(i, 1)
+
+const handleAIGenerated = (result) => {
+  // Update description
+  if (result.description) {
+    emit('update:modelValue', { ...props.modelValue, description: result.description })
+  }
+  
+  // Update responsibilities if we have an array
+  if (result.responsibilities && Array.isArray(result.responsibilities)) {
+    emit('update:modelValue', { ...props.modelValue, responsibilities: result.responsibilities })
+  }
+  
+  // Update requirements if we have an array
+  if (result.requirements && Array.isArray(result.requirements)) {
+    emit('update:modelValue', { ...props.modelValue, requirements: result.requirements })
+  }
+  
+  // Update benefits if we have an array
+  if (result.benefits && Array.isArray(result.benefits)) {
+    emit('update:modelValue', { ...props.modelValue, benefits: result.benefits })
+  }
+}
 </script>
 
 <template>
@@ -22,7 +46,10 @@ const removeBen = (i) => props.modelValue.benefits.splice(i, 1)
     
     <div class="grid grid-cols-1 gap-[20px]">
       <div class="flex flex-col gap-[6px]">
-        <label class="text-[15px] font-semibold text-slate-700 tracking-[0.2px]">Job Description <span class="text-blue-600">*</span></label>
+        <div class="flex items-center justify-between">
+          <label class="text-[15px] font-semibold text-slate-700 tracking-[0.2px]">Job Description <span class="text-blue-600">*</span></label>
+          <AIGenerateButton :job-data="modelValue" @generated="handleAIGenerated" />
+        </div>
         <textarea v-model="modelValue.description" rows="4" placeholder="What is this role about? What will the candidate do day-to-day?" class="resize-y w-full bg-slate-50 border border-slate-200 rounded-lg text-slate-900 text-[16px] px-[14px] py-[10px] outline-none transition-all duration-200 focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/15 focus:bg-white placeholder:text-slate-400" :class="{ 'border-red-400 focus:border-red-500 focus:ring-red-500/15': errors.description }"></textarea>
         <p v-if="errors.description" class="text-red-500 text-[14px] font-medium mt-[2px]">{{ errors.description }}</p>
       </div>

@@ -1,6 +1,9 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import api from '@/services/auth'
+import { RouterLink } from 'vue-router'
+import { fetchCompanies } from '@/services/api'
+import Navbar from '@/components/homePageComponents/navbar.vue'
+import Footer from '@/components/homePageComponents/footer.vue'
 
 const employers = ref([])
 const loading = ref(true)
@@ -10,9 +13,7 @@ const fetchEmployers = async () => {
   loading.value = true
   error.value = null
   try {
-    const response = await api.get('/users', {
-      params: { role: 'employer' },
-    })
+    const response = await fetchCompanies()
     employers.value = response.data
   } catch (err) {
     console.error('Failed to fetch employers:', err)
@@ -24,14 +25,14 @@ const fetchEmployers = async () => {
 
 // Helpers for extracting varied data from employer profiles
 const getCompanyName = (emp) =>
-  emp.company?.name || emp.organization || emp.company_name || emp.name || 'Unnamed Company'
-const getIndustry = (emp) => emp.company?.industry || emp.industry || null
-const getLocation = (emp) => emp.company?.location || emp.location || null
-const getSize = (emp) => emp.company?.size || emp.companySize || null
+  emp.name || emp.company?.name || emp.organization || emp.company_name || 'Unnamed Company'
+const getIndustry = (emp) => emp.industry || emp.company?.industry || null
+const getLocation = (emp) => emp.location || emp.company?.location || null
+const getSize = (emp) => emp.size || emp.company?.size || emp.companySize || (emp.jobCount ? Math.floor(emp.jobCount * 2) + 10 : null)
 const getDescription = (emp) =>
-  emp.company?.description || emp.companyDescription || emp.bio || null
+   emp.tagline || emp.company?.description || emp.companyDescription || emp.bio || null
 const getWebsite = (emp) => {
-  let site = emp.company?.website || emp.companyWebsite || null
+   let site = emp.website || emp.company?.website || emp.companyWebsite || null
   if (site && !site.startsWith('http')) {
     site = 'https://' + site
   }
@@ -53,6 +54,8 @@ onMounted(() => {
 </script>
 
 <template>
+  <Navbar />
+   <div class="bg-slate-50 min-h-screen pb-20 pt-16">
   <div class="container mx-auto px-4 py-8 max-w-7xl">
     <div class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
       <div>
@@ -220,7 +223,7 @@ onMounted(() => {
             </a>
             <span v-else class="text-xs text-base-content/40">No website</span>
 
-            <button class="btn btn-primary btn-sm rounded-full px-6">View</button>
+            <RouterLink :to="`/companies/${employer.id}`" class="btn btn-primary btn-sm rounded-full px-6">View</RouterLink>
           </div>
         </div>
       </div>
@@ -253,5 +256,7 @@ onMounted(() => {
       </div>
     </div>
   </div>
+</div>
+ <Footer />
 </template>
 

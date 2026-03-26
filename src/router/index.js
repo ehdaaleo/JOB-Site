@@ -71,6 +71,12 @@ const router = createRouter({
       name: 'companies',
       component: () => import('../views/CompaniesView.vue'),
     },
+    {
+      path: '/companies/:id',
+      name: 'company-detail',
+      component: () => import('../views/CompanyDetailView.vue'),
+      props: true,
+    },
     // Protected Routes - Profile & Dashboard
     {
       path: '/profile',

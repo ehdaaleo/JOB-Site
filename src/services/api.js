@@ -244,7 +244,11 @@ export const mockCompanies = [
     jobCount: 45,
     rating: 4.8,
     isHiring: true,
-    openJobs: ["Frontend Developer", "Backend Engineer", "DevOps"]
+    openJobs: [
+      { id: 1, title: "Frontend Developer", workType: "Full-time", location: "San Francisco, CA" },
+      { id: 4, title: "Backend Engineer", workType: "Full-time", location: "Austin, TX" },
+      { id: 5, title: "DevOps", workType: "Full-time", location: "Seattle, WA" }
+    ]
   },
   {
     id: 2,
@@ -255,7 +259,11 @@ export const mockCompanies = [
     jobCount: 32,
     rating: 4.7,
     isHiring: true,
-    openJobs: ["Product Manager", "Data Scientist", "UX Designer"]
+    openJobs: [
+      { id: 2, title: "Product Manager", workType: "Full-time", location: "New York, NY" },
+      { id: 7, title: "Data Scientist", workType: "Full-time", location: "Remote" },
+      { id: 3, title: "UX Designer", workType: "Full-time", location: "Remote" }
+    ]
   },
   {
     id: 3,
@@ -266,7 +274,11 @@ export const mockCompanies = [
     jobCount: 28,
     rating: 4.6,
     isHiring: true,
-    openJobs: ["Cloud Architect", "Security Engineer", "Python Developer"]
+    openJobs: [
+      { id: 8, title: "Cloud Architect", workType: "Full-time", location: "Austin, TX" },
+      { id: 9, title: "Security Engineer", workType: "Full-time", location: "Remote" },
+      { id: 4, title: "Python Developer", workType: "Full-time", location: "Austin, TX" }
+    ]
   },
   {
     id: 4,
@@ -277,7 +289,10 @@ export const mockCompanies = [
     jobCount: 18,
     rating: 4.9,
     isHiring: false,
-    openJobs: ["UI/UX Designer", "Graphic Designer"]
+    openJobs: [
+      { id: 3, title: "UI/UX Designer", workType: "Full-time", location: "Remote" },
+      { id: 10, title: "Graphic Designer", workType: "Contract", location: "Remote" }
+    ]
   },
   {
     id: 5,
@@ -288,7 +303,11 @@ export const mockCompanies = [
     jobCount: 22,
     rating: 4.5,
     isHiring: true,
-    openJobs: ["Marketing Manager", "SEO Specialist", "Content Writer"]
+    openJobs: [
+      { id: 6, title: "Marketing Manager", workType: "Full-time", location: "Los Angeles, CA" },
+      { id: 11, title: "SEO Specialist", workType: "Full-time", location: "Remote" },
+      { id: 12, title: "Content Writer", workType: "Freelance", location: "Remote" }
+    ]
   },
   {
     id: 6,
@@ -299,7 +318,10 @@ export const mockCompanies = [
     jobCount: 15,
     rating: 4.7,
     isHiring: true,
-    openJobs: ["Financial Analyst", "Backend Developer"]
+    openJobs: [
+      { id: 13, title: "Financial Analyst", workType: "Full-time", location: "Chicago, IL" },
+      { id: 14, title: "Backend Developer", workType: "Full-time", location: "Remote" }
+    ]
   }
 ]
 
@@ -382,13 +404,19 @@ export const fetchCategories = async () => {
   return { data: mockCategories }
 }
 
-/**
- * Fetch companies
- * @returns {Promise}
- */
 export const fetchCompanies = async () => {
   await new Promise(resolve => setTimeout(resolve, 400))
   return { data: mockCompanies }
+}
+
+/**
+ * Fetch company by id
+ * @returns {Promise}
+ */
+export const fetchCompanyById = async (id) => {
+  await new Promise(resolve => setTimeout(resolve, 300))
+  const company = mockCompanies.find(c => c.id === parseInt(id))
+  return { data: company }
 }
 
 /**

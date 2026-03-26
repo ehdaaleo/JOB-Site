@@ -121,7 +121,7 @@ const validateStep = (step) => {
     if (!form.value.category_id) { errors.value.category_id = 'Category is required'; isValid = false }
     if (!form.value.work_type) { errors.value.work_type = 'Work type is required'; isValid = false }
     if (!form.value.type) { errors.value.type = 'Job type is required'; isValid = false }
-    if (!form.value.location?.trim()) { errors.value.location = 'Location is required'; isValid = false }
+    if (form.value.work_type !== 'remote' && !form.value.location?.trim()) { errors.value.location = 'Location is required'; isValid = false }
   } else if (step === 1) {
     if (!form.value.description?.trim()) { errors.value.description = 'Description is required'; isValid = false }
     

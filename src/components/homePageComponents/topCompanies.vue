@@ -82,15 +82,15 @@ const getEmployeeCount = (jobCount) => {
           </div>
 
           <!-- Button -->
-          <a :href="`/companies/${company.id}`" class="block w-full py-2 text-center border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors">
+          <router-link :to="`/companies/${company.id}`" class="block w-full py-2 text-center border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors">
             View Company
-          </a>
+          </router-link>
         </div>
       </div>
 
       <!-- View All -->
       <div class="mt-10 text-center">
-        <a href="/companies" class="inline-block px-6 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50">View All Companies</a>
+        <router-link to="/companies" class="inline-block px-6 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50">View All Companies</router-link>
       </div>
     </div>
   </section>

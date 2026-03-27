@@ -1,5 +1,5 @@
 @import "tailwindcss";
-
+@custom-variant dark (&:is(.dark *));
 /* Base Styles */
 *,
 *::before,
@@ -413,3 +413,24 @@ input, textarea, select {
   .lg\:text-6xl { font-size: 3.75rem; }
   .lg\:max-w-3xl { max-width: 48rem; }
 }
+
+/* --- Global Dark Mode Overrides --- */
+.dark .bg-white { background-color: #111827 !important; } /* bg-gray-900 */
+.dark .bg-gray-50 { background-color: #1f2937 !important; } /* bg-gray-800 */
+.dark .text-gray-900, .dark .text-gray-800 { color: #ffffff !important; } /* text-white */
+.dark .text-gray-700, .dark .text-gray-600, .dark .text-gray-500 { color: #9ca3af !important; } /* text-gray-400 */
+.dark .border-gray-100, .dark .border-gray-200, .dark .border-gray-300 { border-color: #1f2937 !important; } /* border-gray-800 */
+
+/* Form Elements */
+.dark input:not([type="checkbox"]):not([type="radio"]),
+.dark textarea,
+.dark select {
+  background-color: #1f2937 !important; /* bg-gray-800 */
+  border-color: #374151 !important; /* border-gray-700 */
+  color: #ffffff !important; /* text-white */
+}
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #9ca3af !important; /* text-gray-400 */
+}
+

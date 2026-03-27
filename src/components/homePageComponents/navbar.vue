@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useAuth0 } from '@auth0/auth0-vue'
+import ThemeToggle from '@/components/ThemeToggle.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -31,7 +32,7 @@ const navLinks = [
 </script>
 
 <template>
-  <nav class="navbar bg-white fixed top-0 left-0 right-0 z-50 border-b border-gray-100" :class="{ 'shadow-md': isScrolled }">
+  <nav class="navbar bg-white dark:bg-gray-900 fixed top-0 left-0 right-0 z-50 border-b border-gray-100 dark:border-gray-800 transition-colors" :class="{ 'shadow-md': isScrolled }">
     <div class="container mx-auto px-4">
       <div class="flex items-center justify-between w-full h-16">
         <!-- Logo -->
@@ -41,7 +42,7 @@ const navLinks = [
               <path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </div>
-          <span class="text-lg font-bold text-gray-800">JobHub</span>
+          <span class="text-lg font-bold text-gray-800 dark:text-gray-100">JobHub</span>
         </RouterLink>
 
         <!-- Desktop Menu -->
@@ -50,7 +51,7 @@ const navLinks = [
             v-for="link in navLinks" 
             :key="link.path" 
             :to="link.path"
-            class="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors"
+            class="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
           >
             {{ link.name }}
           </RouterLink>
@@ -58,10 +59,11 @@ const navLinks = [
 
         <!-- Auth -->
         <div class="hidden md:flex items-center gap-3">
+          <ThemeToggle />
           <template v-if="authStore.isAuthenticated">
             <RouterLink 
               :to="`/${authStore.user?.role || 'candidate'}/dashboard`" 
-              class="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors mr-2"
+              class="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors mr-2"
             >
               Dashboard
             </RouterLink>
@@ -78,7 +80,7 @@ const navLinks = [
             </button>
           </template>
           <template v-else>
-            <button class="text-sm font-medium text-gray-600 hover:text-gray-800" @click="router.push('/login')">
+            <button class="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white transition-colors" @click="router.push('/login')">
               Log in
             </button>
             <button class="text-sm font-medium px-4 py-2 bg-linear-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:opacity-90" @click="router.push('/register')">
@@ -88,8 +90,9 @@ const navLinks = [
         </div>
 
         <!-- Mobile -->
-        <div class="md:hidden">
-          <button class="p-2 text-gray-600 hover:text-gray-800" @click="isMenuOpen = !isMenuOpen">
+        <div class="md:hidden flex items-center gap-2">
+          <ThemeToggle />
+          <button class="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white" @click="isMenuOpen = !isMenuOpen">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
@@ -98,14 +101,14 @@ const navLinks = [
       </div>
 
       <!-- Mobile Menu -->
-      <div v-if="isMenuOpen" class="md:hidden py-3 border-t border-gray-100">
+      <div v-if="isMenuOpen" class="md:hidden py-3 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900">
         <div class="flex flex-col gap-2">
-          <RouterLink v-for="link in navLinks" :key="link.path" :to="link.path" class="px-3 py-2 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-50" @click="isMenuOpen = false">
+          <RouterLink v-for="link in navLinks" :key="link.path" :to="link.path" class="px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors" @click="isMenuOpen = false">
             {{ link.name }}
           </RouterLink>
-          <div class="h-px bg-gray-200 my-1"></div>
+          <div class="h-px bg-gray-200 dark:bg-gray-800 my-1"></div>
           <template v-if="authStore.isAuthenticated">
-            <RouterLink :to="`/${authStore.user?.role || 'candidate'}/dashboard`" class="px-3 py-2 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-50 text-left" @click="isMenuOpen = false">Dashboard</RouterLink>
+            <RouterLink :to="`/${authStore.user?.role || 'candidate'}/dashboard`" class="px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-left" @click="isMenuOpen = false">Dashboard</RouterLink>
             <!-- Post Job for Mobile Employers -->
             <RouterLink 
               v-if="authStore.user?.role === 'employer'"
@@ -118,7 +121,7 @@ const navLinks = [
             <button class="px-3 py-2 text-sm font-medium text-red-600 rounded-lg hover:bg-red-50 text-left" @click="handleLogout(); isMenuOpen = false">Log out</button>
           </template>
           <template v-else>
-            <button class="px-3 py-2 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-50 text-left" @click="router.push('/login'); isMenuOpen = false">Log in</button>
+            <button class="px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-left" @click="router.push('/login'); isMenuOpen = false">Log in</button>
             <button class="px-3 py-2 text-sm font-medium bg-linear-to-r from-blue-600 to-indigo-600 text-white rounded-lg" @click="router.push('/register'); isMenuOpen = false">Post a Job</button>
           </template>
         </div>

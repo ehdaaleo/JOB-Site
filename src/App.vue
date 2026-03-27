@@ -1,8 +1,15 @@
 <script setup>
-import { watch } from 'vue'
+import { watch, onMounted } from 'vue'
 import { RouterView } from 'vue-router'
 import { useAuth0 } from '@auth0/auth0-vue'
 import { useAuthStore } from '@/stores/auth'
+import { useTheme } from '@/composables/useTheme'
+
+const { initTheme } = useTheme()
+
+onMounted(() => {
+  initTheme()
+})
 
 const { user, isAuthenticated, isLoading } = useAuth0()
 const authStore = useAuthStore()
@@ -21,7 +28,9 @@ watch([user, isAuthenticated, isLoading], ([newUser, authenticated, loading]) =>
 </script>
 
 <template>
-  <RouterView />
+  <main class="bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-300 min-h-screen">
+    <RouterView />
+  </main>
 </template>
 
 <style>

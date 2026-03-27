@@ -4,6 +4,7 @@ import { RouterView } from 'vue-router'
 import { useAuth0 } from '@auth0/auth0-vue'
 import { useAuthStore } from '@/stores/auth'
 import { useTheme } from '@/composables/useTheme'
+import ChatbotWidget from '@/components/chatbot/ChatbotWidget.vue'
 
 const { initTheme } = useTheme()
 
@@ -30,6 +31,7 @@ watch([user, isAuthenticated, isLoading], ([newUser, authenticated, loading]) =>
 <template>
   <main class="bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-300 min-h-screen">
     <RouterView />
+    <ChatbotWidget />
   </main>
 </template>
 

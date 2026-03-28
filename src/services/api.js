@@ -245,9 +245,15 @@ export const mockCompanies = [
     rating: 4.8,
     isHiring: true,
     openJobs: [
-      { id: 1, title: "Frontend Developer", workType: "Full-time", location: "San Francisco, CA" },
-      { id: 4, title: "Backend Engineer", workType: "Full-time", location: "Austin, TX" },
-      { id: 5, title: "DevOps", workType: "Full-time", location: "Seattle, WA" }
+      {
+        id: 1,
+        title: "Senior Frontend Developer",
+        location: "San Francisco, CA",
+        workType: "remote",
+        salaryMin: 120000,
+        salaryMax: 160000,
+        type: "full-time"
+      }
     ]
   },
   {
@@ -260,13 +266,40 @@ export const mockCompanies = [
     rating: 4.7,
     isHiring: true,
     openJobs: [
-      { id: 2, title: "Product Manager", workType: "Full-time", location: "New York, NY" },
-      { id: 7, title: "Data Scientist", workType: "Full-time", location: "Remote" },
-      { id: 3, title: "UX Designer", workType: "Full-time", location: "Remote" }
+      {
+        id: 2,
+        title: "Product Manager",
+        location: "New York, NY",
+        workType: "hybrid",
+        salaryMin: 130000,
+        salaryMax: 180000,
+        type: "full-time"
+      }
     ]
   },
   {
     id: 3,
+    name: "DesignStudio",
+    tagline: "Design that inspires",
+    location: "Remote",
+    industry: "Design",
+    jobCount: 18,
+    rating: 4.9,
+    isHiring: true,
+    openJobs: [
+      {
+        id: 3,
+        title: "UX/UI Designer",
+        location: "Remote",
+        workType: "remote",
+        salaryMin: 90000,
+        salaryMax: 130000,
+        type: "full-time"
+      }
+    ]
+  },
+  {
+    id: 4,
     name: "CloudSystems",
     tagline: "Cloud solutions for everyone",
     location: "Austin, TX",
@@ -275,27 +308,40 @@ export const mockCompanies = [
     rating: 4.6,
     isHiring: true,
     openJobs: [
-      { id: 8, title: "Cloud Architect", workType: "Full-time", location: "Austin, TX" },
-      { id: 9, title: "Security Engineer", workType: "Full-time", location: "Remote" },
-      { id: 4, title: "Python Developer", workType: "Full-time", location: "Austin, TX" }
-    ]
-  },
-  {
-    id: 4,
-    name: "DesignStudio",
-    tagline: "Design that inspires",
-    location: "Remote",
-    industry: "Design",
-    jobCount: 18,
-    rating: 4.9,
-    isHiring: false,
-    openJobs: [
-      { id: 3, title: "UI/UX Designer", workType: "Full-time", location: "Remote" },
-      { id: 10, title: "Graphic Designer", workType: "Contract", location: "Remote" }
+      {
+        id: 4,
+        title: "Backend Engineer",
+        location: "Austin, TX",
+        workType: "onsite",
+        salaryMin: 110000,
+        salaryMax: 150000,
+        type: "full-time"
+      }
     ]
   },
   {
     id: 5,
+    name: "InfraTech",
+    tagline: "Next-gen infrastructure solutions",
+    location: "Seattle, WA",
+    industry: "Infrastructure",
+    jobCount: 15,
+    rating: 4.7,
+    isHiring: true,
+    openJobs: [
+      {
+        id: 5,
+        title: "DevOps Engineer",
+        location: "Seattle, WA",
+        workType: "hybrid",
+        salaryMin: 140000,
+        salaryMax: 190000,
+        type: "full-time"
+      }
+    ]
+  },
+  {
+    id: 6,
     name: "GrowthLabs",
     tagline: "Data-driven marketing",
     location: "Los Angeles, CA",
@@ -304,23 +350,15 @@ export const mockCompanies = [
     rating: 4.5,
     isHiring: true,
     openJobs: [
-      { id: 6, title: "Marketing Manager", workType: "Full-time", location: "Los Angeles, CA" },
-      { id: 11, title: "SEO Specialist", workType: "Full-time", location: "Remote" },
-      { id: 12, title: "Content Writer", workType: "Freelance", location: "Remote" }
-    ]
-  },
-  {
-    id: 6,
-    name: "FinTech Pro",
-    tagline: "Revolutionizing finance",
-    location: "Chicago, IL",
-    industry: "Finance",
-    jobCount: 15,
-    rating: 4.7,
-    isHiring: true,
-    openJobs: [
-      { id: 13, title: "Financial Analyst", workType: "Full-time", location: "Chicago, IL" },
-      { id: 14, title: "Backend Developer", workType: "Full-time", location: "Remote" }
+      {
+        id: 6,
+        title: "Marketing Manager",
+        location: "Los Angeles, CA",
+        workType: "onsite",
+        salaryMin: 80000,
+        salaryMax: 120000,
+        type: "full-time"
+      }
     ]
   }
 ]

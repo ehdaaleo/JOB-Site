@@ -1,10 +1,18 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useProfileStore } from '../../stores/profileStore'
+import { useAuthStore } from '../../stores/auth'
 import Hero from '../../components/Hero.vue'
+import NavBar from '@/components/homePageComponents/navbar.vue'
+import Footer from '@/components/homePageComponents/footer.vue'
 
 const profileStore = useProfileStore()
+const authStore = useAuthStore()
+
 const profile = computed(() => profileStore.profile)
+const isOwner = computed(() => {
+  return authStore.user && authStore.user.email === profile.value.email
+})
 
 const isEditing = ref(false)
 const editData = ref({})
@@ -35,30 +43,46 @@ const addSkill = () => {
 const removeSkill = (skill) => {
   profileStore.removeSkill(skill)
 }
+const downloadResume = () => {
+  const link = document.createElement('a')
+  link.href = profile.value.resume
+  link.download = 'resume.pdf'
+  link.click()
+}
 </script>
 
 <template>
   <div class="profile-view">
     <!-- Hero Section -->
-    <Hero />
-
+    <!-- <Hero /> -->
+<NavBar />
+<div class="bg-slate-50 min-h-screen pb-20 pt-16">
+  <div class="container mx-auto px-4 py-8 max-w-7xl">
     <!-- Header -->
     <div class="bg-white border-b border-gray-200 px-6 py-4">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-2xl font-bold text-gray-900">My Profile</h1>
-          <p class="text-sm text-gray-500">Manage your profile information</p>
+          <h1 class="text-2xl font-bold text-gray-900">{{ isOwner ? 'My Profile' : profile.name + "'s Profile" }}</h1>
+          <p class="text-sm text-gray-500">{{ isOwner ? 'Manage your profile information' : 'View professional profile and experience' }}</p>
         </div>
-        <button v-if="!isEditing" @click="toggleEdit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
-          Edit Profile
-        </button>
-        <div v-else class="flex gap-2">
-          <button @click="toggleEdit" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium">
-            Cancel
+        
+        <div class="flex items-center gap-3">
+
+          <!-- Edit Profile Button (Owner Only) -->
+          <button v-if="isOwner && !isEditing" @click="toggleEdit" class="px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-bold text-sm shadow-sm transition-all flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+            Edit Profile
           </button>
-          <button @click="saveProfile" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">
-            Save
-          </button>
+
+          <div v-if="isOwner && isEditing" class="flex gap-2">
+            <button @click="toggleEdit" class="px-5 py-2.5 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 font-bold text-sm transition-all">
+              Cancel
+            </button>
+            <button @click="saveProfile" class="px-5 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 font-bold text-sm shadow-sm transition-all flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+              Save Changes
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -112,8 +136,13 @@ const removeSkill = (skill) => {
                 </svg>
                 <span>{{ profile.resume }}</span>
               </div>
-              <button class="mt-3 w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium text-sm">
+              <button v-if="isOwner" class="mt-3 w-full px-4 py-2 border border-blue-100 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 font-bold transition-all text-sm flex items-center justify-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                 Upload New Resume
+              </button>
+              <button v-else @click="downloadResume" class="mt-3 w-full px-4 py-2 border border-indigo-100 bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 font-bold transition-all text-sm flex items-center justify-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                Download Resume
               </button>
             </div>
           </div>
@@ -176,6 +205,10 @@ const removeSkill = (skill) => {
       </div>
     </div>
   </div>
+  </div>
+  </div>
+  <Footer />
+
 </template>
 
 <style scoped>

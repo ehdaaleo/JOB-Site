@@ -36,7 +36,7 @@ export const useJobStore = defineStore('jobs', () => {
             avatarColor: '#10b981',
             role: 'Employer'
           },
-          time: '2 hours ago',
+          time: (new Date().toLocaleString()),
           content: 'We are very excited to hear from all the applicants! Feel free to ask any questions about the role here.',
           timestamp: Date.now() - 7200000 
         },
@@ -49,7 +49,7 @@ export const useJobStore = defineStore('jobs', () => {
             avatarColor: '#3b82f6',
             role: 'Candidate'
           },
-          time: '1 hour ago',
+          time: (new Date().toLocaleString()),
           content: 'Is this role strictly onsite or does it offer a hybrid schedule?',
           timestamp: Date.now() - 3600000 
         },
@@ -62,7 +62,7 @@ export const useJobStore = defineStore('jobs', () => {
             avatarColor: '#f59e0b',
             role: 'Candidate'
           },
-          time: '30 mins ago',
+          time: (new Date().toLocaleString()),
           content: 'What is the interview process like?',
           timestamp: Date.now() - 1800000
         },
@@ -75,7 +75,7 @@ export const useJobStore = defineStore('jobs', () => {
             avatarColor: '#6366f1',
             role: 'Candidate'
           },
-          time: '10 mins ago',
+          time: (new Date().toLocaleString()),
           content: 'Just submitted my application!',
           timestamp: Date.now() - 600000
         }

@@ -3,14 +3,14 @@ import { ref, computed } from 'vue'
 
 export const useProfileStore = defineStore('profile', () => {
   const profile = ref({
-    name: 'John Doe',
-    email: 'john@example.com',
-    phone: '+1 234 567 8900',
-    location: 'San Francisco, CA',
+    name: 'Abdo Tolba',
+    email: 'tolba@gmail.com',
+    phone: '+2 0111 234 5678',
+    location: 'Cairo, Egypt',
     role: 'candidate',
     title: 'Senior Software Developer',
     bio: 'Experienced software developer with 5+ years of experience in building web applications. Skilled in Vue.js, React, Node.js, and cloud technologies.',
-    linkedin_profile: 'https://www.linkedin.com/in/johndoe/',
+    linkedin_profile: 'https://www.linkedin.com/in/abdoltolba/',
     profile_picture: 'https://picsum.photos/seed/johndoe/200/200',
     company_name: '',
     company_logo: '',
@@ -20,7 +20,7 @@ export const useProfileStore = defineStore('profile', () => {
       { id: 2, title: 'Software Developer', company: 'StartupXYZ', period: '2019 - 2021', description: 'Built full-stack web applications' }
     ],
     education: [
-      { id: 1, degree: 'BS Computer Science', school: 'University of California', year: '2019' }
+      { id: 1, degree: 'BS Computer Science', school: 'Arab Academy for Science, Technology & Maritime Transport', year: '2025' }
     ],
     resume: 'resume.pdf'
   })

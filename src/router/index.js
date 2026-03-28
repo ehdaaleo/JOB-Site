@@ -141,6 +141,17 @@ const router = createRouter({
         },
       ],
     },
+    {
+      path: '/pricing',
+      name: 'pricing',
+      component: () => import('../views/PricingPage.vue'),
+    },
+    {
+      path: '/checkout/:planId',
+      name: 'checkout',
+      component: () => import('../views/CheckoutView.vue'),
+      meta: { requiresAuth: true, role: 'employer' },
+    },
     // Standalone post-job route (accessible without /employer prefix for direct access)
     {
       path: '/post-job',

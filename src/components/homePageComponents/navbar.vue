@@ -28,6 +28,7 @@ const navLinks = [
   { name: 'Home', path: '/' },
   { name: 'Find Jobs', path: '/jobs' },
   { name: 'Companies', path: '/companies' },
+  { name: 'Pricing', path: '/pricing' },
 ]
 </script>
 
@@ -84,7 +85,7 @@ const navLinks = [
               Log in
             </button>
             <button class="text-sm font-medium px-4 py-2 bg-linear-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:opacity-90" @click="router.push('/register')">
-              Post a Job
+              Register
             </button>
           </template>
         </div>
@@ -122,7 +123,7 @@ const navLinks = [
           </template>
           <template v-else>
             <button class="px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-left" @click="router.push('/login'); isMenuOpen = false">Log in</button>
-            <button class="px-3 py-2 text-sm font-medium bg-linear-to-r from-blue-600 to-indigo-600 text-white rounded-lg" @click="router.push('/register'); isMenuOpen = false">Post a Job</button>
+            <button class="px-3 py-2 text-sm font-medium bg-linear-to-r from-blue-600 to-indigo-600 text-white rounded-lg" @click="router.push('/register'); isMenuOpen = false">Register</button>
           </template>
         </div>
       </div>

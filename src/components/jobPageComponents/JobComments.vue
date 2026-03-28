@@ -1,8 +1,9 @@
-﻿
+
 <script setup>
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useJobStore } from '../../stores/jobStore';
+import { useAuthStore } from '../../stores/auth';
 
 const props = defineProps({
   jobId: {
@@ -13,18 +14,30 @@ const props = defineProps({
 
 const router = useRouter();
 const jobStore = useJobStore();
+const authStore = useAuthStore();
 
 // reactive job reference and comments array
 const job = computed(() => jobStore.getJobById(props.jobId));
 const comments = computed(() => job.value?.comments || []);
 
-// mock auth data
-const isLoggedIn = ref(true); // default to logged in for testing
-const currentUser = ref({
-  id: 'u1',
-  name: 'Mostafa Ahmed',
-  initials: 'MA',
-  role: 'candidate'
+// get auth info from store
+const isLoggedIn = computed(() => authStore.isLoggedIn);
+const currentUser = computed(() => {
+  if (!authStore.user) return null;
+  const name = authStore.user.name || 'User';
+  const initials = name
+    .split(' ')
+    .filter(Boolean)
+    .map(n => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+
+  return {
+    ...authStore.user,
+    initials: initials || 'U',
+    role: authStore.user.role || 'candidate'
+  };
 });
 
 // state
@@ -78,7 +91,7 @@ const postComment = () => {
       avatarColor: '#8b5cf6',
       role: currentUser.value.role
     },
-    time: 'Just now',
+    time: new Date().toLocaleString(),
     content: newComment.value.trim(),
     timestamp: Date.now()
   });

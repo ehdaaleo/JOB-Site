@@ -3,6 +3,8 @@ import { computed } from 'vue'
 import { useJobStore } from '../../stores/jobStore'
 import { useApplicationStore } from '../../stores/applicationStore'
 import { useAuthStore } from '../../stores/auth'
+import Navbar from '@/components/homePageComponents/navbar.vue'
+import Footer from '@/components/homePageComponents/footer.vue'
 
 const jobStore = useJobStore()
 const applicationStore = useApplicationStore()
@@ -41,6 +43,9 @@ const formatDate = (dateString) => {
 </script>
 
 <template>
+  <Navbar />
+  <div class="bg-slate-50 min-h-screen pb-20 pt-16">
+  <div class="container mx-auto px-4 py-8 max-w-7xl">
   <div class="employer-dashboard">
     <!-- Header -->
     <div class="bg-white border-b border-gray-200 px-6 py-4">
@@ -145,12 +150,32 @@ const formatDate = (dateString) => {
         </div>
       </div>
 
+      <!-- Promotion Banner -->
+      <div class="px-0 mt-8 mb-4">
+        <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-10 text-white relative overflow-hidden shadow-2xl group">
+          <div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+            <div class="max-w-2xl text-center md:text-left">
+              <span class="inline-block px-3 py-1 bg-white/20 rounded-full text-xs font-bold uppercase tracking-wider mb-4">Limited Offer: Save 20%</span>
+              <h2 class="text-3xl md:text-4xl font-extrabold mb-4 leading-tight">Boost Your Recruitment Today</h2>
+              <p class="text-blue-100 text-lg leading-relaxed">Upgrade to our Pro package and get 15 featured listings, advanced analytics, and priority placement. Focus on finding talent, we'll handle the rest.</p>
+            </div>
+            <RouterLink to="/pricing" class="px-10 py-5 bg-white text-blue-700 rounded-2xl font-bold hover:bg-blue-50 transition-all shadow-xl hover:-translate-y-1 active:scale-95 whitespace-nowrap">
+              Explore Packages
+            </RouterLink>
+          </div>
+          <!-- Decorative Background Elements -->
+          <div class="absolute -right-20 -bottom-20 w-96 h-96 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-all duration-1000"></div>
+          <div class="absolute -left-10 -top-10 w-64 h-64 bg-indigo-400/20 rounded-full blur-2xl"></div>
+          <div class="absolute top-1/2 left-1/4 w-32 h-32 bg-blue-400/10 rounded-full blur-xl animate-pulse"></div>
+        </div>
+      </div>
+
       <!-- Quick Actions -->
       <div class="mt-6">
         <h2 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <a href="/employer/post-job" class="flex items-center p-4 bg-white border border-gray-200 rounded-xl hover:border-blue-300 hover:shadow-md transition-all">
-            <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center mr-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <RouterLink to="/employer/post-job" class="flex items-center p-4 bg-white border border-gray-200 rounded-xl hover:border-blue-300 hover:shadow-md transition-all">
+            <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center mr-4 shadow-sm">
               <svg class="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
@@ -159,22 +184,34 @@ const formatDate = (dateString) => {
               <p class="font-medium text-gray-900">Post New Job</p>
               <p class="text-sm text-gray-500">Create a new job listing</p>
             </div>
-          </a>
+          </RouterLink>
           
-          <a href="/employer/manage-jobs" class="flex items-center p-4 bg-white border border-gray-200 rounded-xl hover:border-blue-300 hover:shadow-md transition-all">
-            <div class="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center mr-4">
+          <RouterLink to="/employer/manage-jobs" class="flex items-center p-4 bg-white border border-gray-200 rounded-xl hover:border-blue-300 hover:shadow-md transition-all">
+            <div class="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center mr-4 shadow-sm">
               <svg class="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
             <div>
               <p class="font-medium text-gray-900">Manage Jobs</p>
-              <p class="text-sm text-gray-500">Edit or delete postings</p>
+              <p class="text-sm text-gray-500">Edit active postings</p>
             </div>
-          </a>
+          </RouterLink>
+
+          <RouterLink to="/pricing" class="flex items-center p-4 bg-white border border-gray-200 rounded-xl hover:border-blue-300 hover:shadow-md transition-all">
+            <div class="w-10 h-10 rounded-lg bg-yellow-50 flex items-center justify-center mr-4 shadow-sm">
+              <svg class="w-5 h-5 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <p class="font-medium text-gray-900">Pricing Plans</p>
+              <p class="text-sm text-gray-500">View available packages</p>
+            </div>
+          </RouterLink>
           
-          <a href="/employer/settings" class="flex items-center p-4 bg-white border border-gray-200 rounded-xl hover:border-blue-300 hover:shadow-md transition-all">
-            <div class="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center mr-4">
+          <RouterLink to="/employer/settings" class="flex items-center p-4 bg-white border border-gray-200 rounded-xl hover:border-blue-300 hover:shadow-md transition-all">
+            <div class="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center mr-4 shadow-sm">
               <svg class="w-5 h-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -184,11 +221,14 @@ const formatDate = (dateString) => {
               <p class="font-medium text-gray-900">Company Settings</p>
               <p class="text-sm text-gray-500">Update company profile</p>
             </div>
-          </a>
+          </RouterLink>
         </div>
       </div>
     </div>
   </div>
+  </div>
+  </div>
+  <Footer />
 </template>
 
 <style scoped>

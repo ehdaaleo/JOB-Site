@@ -2,6 +2,8 @@
 import { computed } from 'vue'
 import { useApplicationStore } from '../../stores/applicationStore'
 import { useJobStore } from '../../stores/jobStore'
+import Navbar from '@/components/homePageComponents/navbar.vue'
+import Footer from '@/components/homePageComponents/footer.vue'
 
 const applicationStore = useApplicationStore()
 const jobStore = useJobStore()
@@ -22,6 +24,9 @@ const getStatusClass = (status) => {
 </script>
 
 <template>
+  <Navbar />
+  <div class="bg-slate-50 min-h-screen pb-20 pt-16">
+  <div class="container mx-auto px-4 py-8 max-w-7xl">
   <div class="candidate-dashboard">
     <!-- Header -->
     <div class="bg-white border-b border-gray-200 px-6 py-4">
@@ -106,6 +111,9 @@ const getStatusClass = (status) => {
       </div>
     </div>
   </div>
+  </div>
+  </div>
+  <Footer />
 </template>
 
 <style scoped>

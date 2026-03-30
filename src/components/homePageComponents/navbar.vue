@@ -43,7 +43,7 @@ const navLinks = [
               <path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </div>
-          <span class="text-lg font-bold text-gray-800 dark:text-gray-100">JobHub</span>
+          <span class="text-lg font-bold text-gray-800 dark:text-gray-100">Find Jobs site </span>
         </RouterLink>
 
         <!-- Desktop Menu -->

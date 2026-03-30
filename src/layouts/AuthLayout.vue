@@ -14,7 +14,7 @@ import { RouterView } from 'vue-router'
           <path d="M20 24V28" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           <path d="M16 20H24" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
         </svg>
-        <span class="text-3xl font-bold text-blue-600">JobSite</span>
+        <span class="text-3xl font-bold text-blue-600">Find Jobs site</span>
       </router-link>
     </div>
 
@@ -25,7 +25,7 @@ import { RouterView } from 'vue-router'
 
     <!-- Footer -->
     <div class="mt-12 text-center text-sm text-gray-500">
-      <p>&copy; {{ new Date().getFullYear() }} JobSite. All rights reserved.</p>
+      <p>&copy; {{ new Date().getFullYear() }} Find Jobs site. All rights reserved.</p>
       <div class="mt-2 space-x-4">
         <a href="/terms" class="hover:text-blue-600 transition-colors">Terms of Service</a>
         <a href="/privacy" class="hover:text-blue-600 transition-colors">Privacy Policy</a>

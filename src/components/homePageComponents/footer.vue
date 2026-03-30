@@ -76,7 +76,7 @@ const currentYear = new Date().getFullYear()
     <div class="border-t border-gray-800">
       <div class="container mx-auto px-4 py-4">
         <div class="flex flex-col md:flex-row justify-between items-center gap-2">
-          <p class="text-gray-400 text-sm">&copy; {{ currentYear }} JobHub. All rights reserved.</p>
+          <p class="text-gray-400 text-sm">&copy; {{ currentYear }} Find Jobs site. All rights reserved.</p>
           <div class="flex gap-4">
             <a href="/privacy" class="text-gray-400 hover:text-white text-sm transition-colors">Privacy</a>
             <a href="/terms" class="text-gray-400 hover:text-white text-sm transition-colors">Terms</a>

@@ -15,10 +15,11 @@ const stats = [
       <!-- Hero Content -->
       <div class="max-w-3xl mx-auto text-center mb-12">
         <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 mb-5 leading-tight">
-          Find Your <span class="text-blue-600">Dream Job</span> Today
+          Find the  <span class="text-blue-600">Best Jobs</span> Today
         </h1>
         <p class="text-lg text-gray-500 max-w-2xl mx-auto">
-          Connect with top companies and discover opportunities that match your skills and career aspirations.
+          
+Hire the experts your business needs
         </p>
       </div>
 

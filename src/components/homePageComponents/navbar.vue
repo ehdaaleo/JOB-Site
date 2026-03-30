@@ -29,6 +29,7 @@ const navLinks = [
   { name: 'Find Jobs', path: '/jobs' },
   { name: 'Companies', path: '/companies' },
   { name: 'Pricing', path: '/pricing' },
+  { name: 'Profile', path: '/profile' }
 ]
 </script>
 

@@ -254,6 +254,7 @@ const submitJob = () => {
           :hideSubmit="currentStep === 4"
           @next="handleNext"
           @back="handleBack"
+          @submit="submitJob"
         />
       </div>
     </div>

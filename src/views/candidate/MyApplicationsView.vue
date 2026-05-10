@@ -1,22 +1,49 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useApplicationStore } from '../../stores/applicationStore'
+import { useToast } from 'vue-toastification'
+import Navbar from '@/components/homePageComponents/navbar.vue'
+import Footer from '@/components/homePageComponents/footer.vue'
 
 const applicationStore = useApplicationStore()
-const applications = computed(() => applicationStore.myApplications)
+const toast = useToast()
 
 const statusFilter = ref('')
 const selectedApp = ref(null)
 const showModal = ref(false)
 
+const applications = computed(() => applicationStore.applications)
+
 const filteredApps = computed(() => {
   if (!statusFilter.value) return applications.value
-  return applications.value.filter(app => app.status === statusFilter.value)
+  return applications.value.filter((app) => app.status === statusFilter.value)
 })
 
 const getStatusClass = (status) => {
-  const classes = { interviewing: 'bg-green-100 text-green-700', pending: 'bg-yellow-100 text-yellow-700', rejected: 'bg-red-100 text-red-700', accepted: 'bg-blue-100 text-blue-700' }
+  const classes = {
+    pending: 'bg-yellow-100 text-yellow-700',
+    reviewed: 'bg-blue-100 text-blue-700',
+    shortlisted: 'bg-indigo-100 text-indigo-700',
+    accepted: 'bg-green-100 text-green-700',
+    rejected: 'bg-red-100 text-red-700',
+    withdrawn: 'bg-gray-200 text-gray-600',
+  }
   return classes[status] || 'bg-gray-100 text-gray-700'
+}
+
+const employerName = (app) =>
+  app.job?.employer?.company_name ||
+  app.job?.employer?.organization ||
+  app.job?.employer?.name ||
+  'Company'
+
+const formatDate = (iso) => (iso ? new Date(iso).toLocaleDateString() : '')
+
+const formatSalary = (job) => {
+  if (!job?.salary_min && !job?.salary_max) return ''
+  const fmt = (n) => `$${Math.round(Number(n) / 1000)}K`
+  if (job.salary_min && job.salary_max) return `${fmt(job.salary_min)} - ${fmt(job.salary_max)}`
+  return job.salary_min ? `${fmt(job.salary_min)}+` : `up to ${fmt(job.salary_max)}`
 }
 
 const viewDetails = (app) => {
@@ -24,65 +51,66 @@ const viewDetails = (app) => {
   showModal.value = true
 }
 
-const withdrawApplication = (app) => {
-  if (confirm('Are you sure you want to withdraw this application?')) {
-    applicationStore.withdrawApplication(app.id)
+const withdrawApplication = async (app) => {
+  if (!confirm('Are you sure you want to withdraw this application?')) return
+  try {
+    await applicationStore.withdrawApplication(app.job_id || app.job?.id, app.id)
+    toast.success('Application withdrawn.')
+  } catch (err) {
+    toast.error(applicationStore.error || 'Could not withdraw application.')
   }
 }
+
+onMounted(() => applicationStore.fetchMyApplications())
 </script>
 
 <template>
-  <div class="my-applications">
-    <!-- Header -->
+  <Navbar />
+  <div class="my-applications pt-16">
     <div class="bg-white border-b border-gray-200 px-6 py-4">
-      <div class="flex items-center justify-between">
+      <div class="container mx-auto flex items-center justify-between max-w-6xl">
         <div>
           <h1 class="text-2xl font-bold text-gray-900">My Applications</h1>
           <p class="text-sm text-gray-500">Track your job applications</p>
         </div>
-        <a href="/jobs" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+        <RouterLink to="/jobs" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
           Browse More Jobs
-        </a>
+        </RouterLink>
       </div>
     </div>
 
-    <!-- Filters -->
-    <div class="p-6">
+    <div class="container mx-auto p-6 max-w-6xl">
       <div class="flex flex-wrap gap-2 mb-6">
         <button @click="statusFilter = ''" :class="`px-4 py-2 rounded-lg font-medium text-sm ${!statusFilter ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`">
           All ({{ applications.length }})
         </button>
-        <button @click="statusFilter = 'pending'" :class="`px-4 py-2 rounded-lg font-medium text-sm ${statusFilter === 'pending' ? 'bg-yellow-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`">
-          Pending
-        </button>
-        <button @click="statusFilter = 'interviewing'" :class="`px-4 py-2 rounded-lg font-medium text-sm ${statusFilter === 'interviewing' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`">
-          Interviewing
-        </button>
-        <button @click="statusFilter = 'accepted'" :class="`px-4 py-2 rounded-lg font-medium text-sm ${statusFilter === 'accepted' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`">
-          Accepted
-        </button>
-        <button @click="statusFilter = 'rejected'" :class="`px-4 py-2 rounded-lg font-medium text-sm ${statusFilter === 'rejected' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`">
-          Rejected
+        <button v-for="s in ['pending', 'reviewed', 'shortlisted', 'accepted', 'rejected']" :key="s"
+                @click="statusFilter = s"
+                :class="`px-4 py-2 rounded-lg font-medium text-sm capitalize ${statusFilter === s ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`">
+          {{ s }}
         </button>
       </div>
 
-      <!-- Applications List -->
       <div class="space-y-4">
         <div v-for="app in filteredApps" :key="app.id" class="bg-white rounded-xl border border-gray-200 p-6">
           <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div class="flex-1">
-              <div class="flex items-center gap-3 mb-2">
-                <h3 class="text-lg font-semibold text-gray-900">{{ app.job }}</h3>
-                <span :class="`text-xs px-2 py-1 rounded-full font-medium ${getStatusClass(app.status)}`">
+              <div class="flex items-center gap-3 mb-2 flex-wrap">
+                <h3 class="text-lg font-semibold text-gray-900">{{ app.job?.title || 'Job' }}</h3>
+                <span :class="`text-xs px-2 py-1 rounded-full font-medium capitalize ${getStatusClass(app.status)}`">
                   {{ app.status }}
                 </span>
+                <span v-if="app.payment_status && app.payment_status !== 'unpaid'"
+                      class="text-xs px-2 py-1 rounded-full font-medium bg-emerald-100 text-emerald-700 capitalize">
+                  Payment: {{ app.payment_status }}
+                </span>
               </div>
-              <p class="text-sm text-gray-600 mb-2">{{ app.company }}</p>
+              <p class="text-sm text-gray-600 mb-2">{{ employerName(app) }}</p>
               <div class="flex flex-wrap gap-4 text-sm text-gray-500">
-                <span>{{ app.location }}</span>
-                <span>{{ app.type }}</span>
-                <span>{{ app.salary }}</span>
-                <span>Applied: {{ app.date }}</span>
+                <span v-if="app.job?.location">📍 {{ app.job.location }}</span>
+                <span v-if="app.job?.work_type">{{ app.job.work_type.replace('_', ' ') }}</span>
+                <span v-if="formatSalary(app.job)">{{ formatSalary(app.job) }}</span>
+                <span>Applied: {{ formatDate(app.created_at) }}</span>
               </div>
             </div>
             <div class="flex items-center gap-3">
@@ -97,52 +125,47 @@ const withdrawApplication = (app) => {
         </div>
       </div>
 
-      <!-- Empty State -->
       <div v-if="filteredApps.length === 0" class="text-center py-12">
-        <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
         <h3 class="text-lg font-medium text-gray-900 mb-2">No applications found</h3>
         <p class="text-gray-500 mb-4">Start applying for jobs to see them here.</p>
-        <a href="/jobs" class="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+        <RouterLink to="/jobs" class="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
           Browse Jobs
-        </a>
+        </RouterLink>
       </div>
     </div>
 
-    <!-- Modal -->
     <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" @click="showModal = false">
       <div class="bg-white rounded-xl max-w-lg w-full" @click.stop>
         <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
           <h2 class="text-xl font-semibold text-gray-900">Application Details</h2>
-          <button @click="showModal = false" class="text-gray-400 hover:text-gray-600">
-            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+          <button @click="showModal = false" class="text-gray-400 hover:text-gray-600">×</button>
         </div>
         <div class="p-6" v-if="selectedApp">
-          <h3 class="text-lg font-semibold text-gray-900 mb-1">{{ selectedApp.job }}</h3>
-          <p class="text-gray-600 mb-4">{{ selectedApp.company }}</p>
-          <div class="flex flex-wrap gap-4 mb-4 text-sm text-gray-500">
-            <span>{{ selectedApp.location }}</span>
-            <span>{{ selectedApp.type }}</span>
-            <span>{{ selectedApp.salary }}</span>
-          </div>
+          <h3 class="text-lg font-semibold text-gray-900 mb-1">{{ selectedApp.job?.title }}</h3>
+          <p class="text-gray-600 mb-4">{{ employerName(selectedApp) }}</p>
           <div class="mb-4">
-            <span :class="`text-xs px-2 py-1 rounded-full font-medium ${getStatusClass(selectedApp.status)}`">
+            <span :class="`text-xs px-2 py-1 rounded-full font-medium capitalize ${getStatusClass(selectedApp.status)}`">
               {{ selectedApp.status }}
             </span>
           </div>
-          <div class="mb-4">
+          <div v-if="selectedApp.cover_letter" class="mb-4">
             <h4 class="font-medium text-gray-900 mb-2">Cover Letter</h4>
-            <p class="text-gray-600 text-sm">{{ selectedApp.coverLetter }}</p>
+            <p class="text-gray-600 text-sm whitespace-pre-line">{{ selectedApp.cover_letter }}</p>
           </div>
-          <div class="text-sm text-gray-500">Applied on {{ selectedApp.date }}</div>
+          <div v-if="selectedApp.message" class="mb-4">
+            <h4 class="font-medium text-gray-900 mb-2">Message</h4>
+            <p class="text-gray-600 text-sm whitespace-pre-line">{{ selectedApp.message }}</p>
+          </div>
+          <div v-if="selectedApp.rejection_reason" class="mb-4 bg-red-50 border border-red-100 rounded p-3">
+            <h4 class="font-medium text-red-700 mb-1">Rejection note</h4>
+            <p class="text-red-600 text-sm">{{ selectedApp.rejection_reason }}</p>
+          </div>
+          <div class="text-sm text-gray-500">Applied on {{ formatDate(selectedApp.created_at) }}</div>
         </div>
       </div>
     </div>
   </div>
+  <Footer />
 </template>
 
 <style scoped>

@@ -2,17 +2,12 @@
 import { ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { useAuth0 } from '@auth0/auth0-vue'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
-const { logout, isAuthenticated: isAuth0Authenticated } = useAuth0()
 
 const handleLogout = () => {
-  if (isAuth0Authenticated.value) {
-    logout({ logoutParams: { returnTo: window.location.origin } })
-  }
   authStore.logout()
 }
 const isMenuOpen = ref(false)

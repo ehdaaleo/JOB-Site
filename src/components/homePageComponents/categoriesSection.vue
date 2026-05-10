@@ -1,14 +1,14 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { fetchCategories } from '../../services/api'
+import { categoryApi } from '@/services/api'
 
 const categories = ref([])
 const isLoading = ref(true)
 
 onMounted(async () => {
   try {
-    const response = await fetchCategories()
-    categories.value = response.data
+    const res = await categoryApi.list()
+    categories.value = res.data || res || []
   } catch (err) {
     console.error(err)
   } finally {
@@ -66,7 +66,6 @@ const getColor = (index) => colors[index % colors.length]
           </div>
           <h3 class="font-semibold text-gray-900 text-sm">{{ category.name }}</h3>
           <p class="text-xs text-gray-500 mt-1">{{ getDescription(category.slug) }}</p>
-          <p class="text-xs font-medium text-blue-600 mt-2">{{ category.jobCount }} jobs</p>
         </a>
       </div>
     </div>

@@ -19,22 +19,26 @@ const stats = computed(() => [
     value:
       dashboard.value?.total_applications ??
       applicationStore.applications.length,
+    to: '/candidate/applications',
   },
   {
     label: 'Saved Jobs',
     value: applicationStore.savedJobs.length,
+    to: '/candidate/saved-jobs',
   },
   {
     label: 'Pending',
     value:
       dashboard.value?.pending_applications ??
       applicationStore.applicationsByStatus.pending.length,
+    to: '/candidate/applications',
   },
   {
     label: 'Accepted',
     value:
       dashboard.value?.accepted_applications ??
       applicationStore.applicationsByStatus.accepted.length,
+    to: '/candidate/applications',
   },
 ])
 
@@ -92,18 +96,28 @@ onMounted(async () => {
             <h1 class="text-2xl font-bold text-gray-900">Candidate Dashboard</h1>
             <p class="text-sm text-gray-500">Find and apply for your dream job</p>
           </div>
-          <RouterLink to="/jobs" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
-            Browse Jobs
-          </RouterLink>
+          <div class="flex flex-wrap items-center justify-end gap-3">
+            <RouterLink to="/candidate/saved-jobs" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium">
+              Saved Jobs
+            </RouterLink>
+            <RouterLink to="/jobs" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+              Browse Jobs
+            </RouterLink>
+          </div>
         </div>
 
         <div v-if="error" class="mt-6 bg-red-50 border border-red-200 text-red-700 rounded-lg p-4">{{ error }}</div>
 
         <div class="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div v-for="stat in stats" :key="stat.label" class="bg-white rounded-xl border border-gray-200 p-6">
+          <RouterLink
+            v-for="stat in stats"
+            :key="stat.label"
+            :to="stat.to"
+            class="bg-white rounded-xl border border-gray-200 p-6 transition-colors hover:border-blue-300 hover:bg-blue-50/40"
+          >
             <p class="text-sm text-gray-500">{{ stat.label }}</p>
             <p class="text-3xl font-bold text-gray-900 mt-1">{{ stat.value }}</p>
-          </div>
+          </RouterLink>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">

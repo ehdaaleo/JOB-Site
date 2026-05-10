@@ -60,6 +60,16 @@ const router = createRouter({
       name: 'pricing',
       component: () => import('../views/PricingPage.vue'),
     },
+    {
+      path: '/about',
+      name: 'about',
+      component: () => import('../views/AboutView.vue'),
+    },
+    {
+      path: '/career-advice',
+      name: 'career-advice',
+      component: () => import('../views/CareerAdviceView.vue'),
+    },
 
     // Protected — generic profile + dashboard shortcuts
     {

@@ -42,7 +42,7 @@ const currentYear = new Date().getFullYear()
             <li><a href="/jobs?category=programming" class="text-gray-400 hover:text-white text-sm transition-colors">Programming Jobs</a></li>
             <li><a href="/jobs?category=design" class="text-gray-400 hover:text-white text-sm transition-colors">Design Jobs</a></li>
             <li><a href="/jobs?category=marketing" class="text-gray-400 hover:text-white text-sm transition-colors">Marketing Jobs</a></li>
-            <li><a href="/register" class="text-gray-400 hover:text-white text-sm transition-colors">Create Account</a></li>
+            <li><RouterLink to="/register" class="text-gray-400 hover:text-white text-sm transition-colors">Create Account</RouterLink></li>
           </ul>
         </div>
 

@@ -25,6 +25,7 @@ const navLinks = [
   { name: 'Find Jobs', path: '/jobs' },
   { name: 'Companies', path: '/companies' },
   { name: 'Pricing', path: '/pricing' },
+  { name: 'About Us', path: '/about' },
   { name: 'Profile', path: '/profile' }
 ]
 
@@ -32,7 +33,11 @@ const visibleNavLinks = computed(() => {
   if (route.path.startsWith('/auth') || !authStore.isAuthenticated) {
     return navLinks.filter((link) => link.name !== 'Profile')
   }
-  return navLinks
+  const links = [...navLinks]
+  if (authStore.isCandidate) {
+    links.splice(3, 0, { name: 'Saved Jobs', path: '/candidate/saved-jobs' })
+  }
+  return links
 })
 </script>
 

@@ -1,7 +1,6 @@
 // Auth components exports
 export { default as AuthCard } from './AuthCard.vue'
 export { default as PasswordStrength } from './PasswordStrength.vue'
-export { default as SocialAuthButtons } from './SocialAuthButtons.vue'
 export { default as LoginForm } from './login/LoginForm.vue'
 export { default as RegisterForm } from './register/RegisterForm.vue'
 export { default as RoleSelection } from './register/RoleSelection.vue'

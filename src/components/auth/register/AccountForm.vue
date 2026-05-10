@@ -120,7 +120,6 @@
 <script setup>
 import { reactive, ref, watch } from 'vue'
 import PasswordStrength from '../PasswordStrength.vue'
-import { authApi } from '@/services/auth'
 
 const props = defineProps({
   form: {
@@ -179,7 +178,7 @@ const validateName = () => {
   return true
 }
 
-const validateEmail = async () => {
+const validateEmail = () => {
   if (!props.form.email || props.form.email.trim() === '') {
     errors.email = 'Email address is required'
     return false
@@ -192,25 +191,8 @@ const validateEmail = async () => {
     errors.email = 'Email address is too long'
     return false
   }
-  
-  // Check if email already exists on the server
-  isCheckingEmail.value = true
-  emailAlreadyExists.value = false
-  try {
-    const exists = await authApi.checkEmailExists(props.form.email)
-    if (exists) {
-      errors.email = 'This email is already registered. Please use a different email or login.'
-      emailAlreadyExists.value = true
-      return false
-    }
-  } catch (error) {
-    console.error('Error checking email:', error)
-    errors.email = 'Unable to verify email. Please try again.'
-    return false
-  } finally {
-    isCheckingEmail.value = false
-  }
-  
+  // Uniqueness is enforced by the Laravel backend (422 on duplicate);
+  // we surface that error from the auth store on submit.
   errors.email = ''
   return true
 }

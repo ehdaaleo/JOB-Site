@@ -9,7 +9,8 @@ const router = createRouter({
       name: 'home',
       component: () => import('../views/HomeScreenView.vue'),
     },
-    // Auth Routes
+
+    // Auth
     {
       path: '/auth',
       component: () => import('../layouts/AuthLayout.vue'),
@@ -26,35 +27,12 @@ const router = createRouter({
           component: () => import('../views/RegisterView.vue'),
           meta: { guestOnly: true },
         },
-        {
-          path: 'forgot-password',
-          name: 'forgot-password',
-          component: () => import('../views/ForgotPasswordView.vue'),
-          meta: { guestOnly: true },
-        },
-        {
-          path: 'reset-password',
-          name: 'reset-password',
-          component: () => import('../views/ResetPasswordView.vue'),
-          meta: { guestOnly: true },
-        },
-        {
-          path: 'callback/:provider',
-          name: 'oauth-callback',
-          component: () => import('../views/auth/OAuthCallback.vue'),
-          meta: { guestOnly: true },
-        },
       ],
     },
-    {
-      path: '/login',
-      redirect: '/auth/login',
-    },
-    {
-      path: '/register',
-      redirect: '/auth/register',
-    },
-    // Main Routes
+    { path: '/login', redirect: '/auth/login' },
+    { path: '/register', redirect: '/auth/register' },
+
+    // Public
     {
       path: '/jobs',
       name: 'jobs',
@@ -77,7 +55,13 @@ const router = createRouter({
       component: () => import('../views/CompanyDetailView.vue'),
       props: true,
     },
-    // Protected Routes - Profile & Dashboard
+    {
+      path: '/pricing',
+      name: 'pricing',
+      component: () => import('../views/PricingPage.vue'),
+    },
+
+    // Protected — generic profile + dashboard shortcuts
     {
       path: '/profile',
       name: 'profile',
@@ -87,27 +71,44 @@ const router = createRouter({
     {
       path: '/dashboard',
       name: 'dashboard',
-      component: () => import('../views/candidate/CandidateDashboardView.vue'),
+      redirect: () => {
+        // Use store at navigation time, not at module load.
+        const auth = useAuthStore()
+        return auth.dashboardRoute
+      },
       meta: { requiresAuth: true },
     },
-    // Employer Routes
+
+    // Apply for a job (candidate only)
+    {
+      path: '/apply/:id',
+      name: 'apply-job',
+      component: () => import('../views/ApplyJobView.vue'),
+      props: true,
+      meta: { requiresAuth: true, role: 'candidate' },
+    },
+
+    // Employer
     {
       path: '/employer',
       meta: { requiresAuth: true, role: 'employer' },
       children: [
-        {
-          path: '',
-          redirect: '/employer/dashboard'
-        },
+        { path: '', redirect: '/employer/dashboard' },
         {
           path: 'dashboard',
           name: 'employer-dashboard',
-          component: () => import('../views/employer/EmployerDashboardView.vue'),
+          component: () =>
+            import('../views/employer/EmployerDashboardView.vue'),
         },
         {
           path: 'manage-jobs',
           name: 'manage-jobs',
           component: () => import('../views/employer/ManageJobsView.vue'),
+        },
+        {
+          path: 'post-job',
+          name: 'job-post',
+          component: () => import('../views/employer/PostJobView.vue'),
         },
         {
           path: 'jobs/:id/edit',
@@ -116,23 +117,22 @@ const router = createRouter({
           props: true,
         },
         {
-          path: 'post-job',
-          name: 'job-post',
-          component: () => import('../views/employer/PostJobView.vue'),
-        },
-        {
-          path: 'job-post',
-          redirect: '/employer/post-job'
-        },
-        {
           path: 'applications',
           name: 'view-applications',
-          component: () => import('../views/employer/ViewApplicationsView.vue'),
+          component: () =>
+            import('../views/employer/ViewApplicationsView.vue'),
+        },
+        {
+          path: 'applications/:applicationId/checkout',
+          name: 'application-checkout',
+          component: () => import('../views/CheckoutView.vue'),
+          props: true,
         },
         {
           path: 'settings',
           name: 'company-settings',
-          component: () => import('../views/employer/CompanySettingsView.vue'),
+          component: () =>
+            import('../views/employer/CompanySettingsView.vue'),
         },
         {
           path: 'payments',
@@ -141,31 +141,18 @@ const router = createRouter({
         },
       ],
     },
-    {
-      path: '/pricing',
-      name: 'pricing',
-      component: () => import('../views/PricingPage.vue'),
-    },
-    {
-      path: '/checkout/:planId',
-      name: 'checkout',
-      component: () => import('../views/CheckoutView.vue'),
-      meta: { requiresAuth: true, role: 'employer' },
-    },
-    // Standalone post-job route (accessible without /employer prefix for direct access)
-    {
-      path: '/post-job',
-      redirect: '/employer/post-job'
-    },
-    // Candidate Routes
+
+    // Candidate
     {
       path: '/candidate',
       meta: { requiresAuth: true, role: 'candidate' },
       children: [
+        { path: '', redirect: '/candidate/dashboard' },
         {
           path: 'dashboard',
           name: 'candidate-dashboard',
-          component: () => import('../views/candidate/CandidateDashboardView.vue'),
+          component: () =>
+            import('../views/candidate/CandidateDashboardView.vue'),
         },
         {
           path: 'profile',
@@ -184,11 +171,13 @@ const router = createRouter({
         },
       ],
     },
-    // Admin Routes
+
+    // Admin
     {
       path: '/admin',
       meta: { requiresAuth: true, role: 'admin' },
       children: [
+        { path: '', redirect: '/admin/dashboard' },
         {
           path: 'dashboard',
           name: 'admin-dashboard',
@@ -206,72 +195,38 @@ const router = createRouter({
         },
       ],
     },
-    // Apply Job Route
-    {
-      path: '/apply/:id',
-      name: 'apply-job',
-      component: () => import('../views/ApplyJobView.vue'),
-      props: true,
-    },
+
     {
       path: '/access-denied',
       name: 'access-denied',
       component: () => import('../views/AccessDeniedView.vue'),
     },
-    // 404 Route
     {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: () => import('../views/NotFoundView.vue'),
     },
   ],
-  scrollBehavior(to, from, savedPosition) {
-    if (savedPosition) {
-      return savedPosition
-    } else {
-      return { top: 0 }
-    }
+  scrollBehavior(_to, _from, saved) {
+    return saved || { top: 0 }
   },
 })
 
-// Navigation Guards
-router.beforeEach((to, from) => {
-  const authStore = useAuthStore()
-  const user = authStore.user
-  const isAuthenticated = authStore.isAuthenticated
+router.beforeEach((to) => {
+  const auth = useAuthStore()
 
-  // Helper function to get redirect path based on role
-  const getRoleRedirect = () => {
-    if (!user?.role) return { name: 'home' }
-    if (user.role === 'candidate') return { name: 'candidate-dashboard' }
-    if (user.role === 'employer') return { name: 'employer-dashboard' }
-    if (user.role === 'admin') return { name: 'admin-dashboard' }
-    return { name: 'home' }
+  if (to.meta.requiresAuth && !auth.isAuthenticated) {
+    return { name: 'login', query: { redirect: to.fullPath } }
   }
 
-  // Check if route requires authentication
-  if (to.meta.requiresAuth) {
-    if (!isAuthenticated) {
-      // Clear any orphaned storage data
-      localStorage.clear()
-      sessionStorage.clear()
-      return { name: 'login', query: { redirect: to.fullPath } }
-    }
-
-    // Check role-based access
-    if (to.meta.role && user?.role !== to.meta.role) {
-      return { name: 'access-denied' }
-    }
+  if (to.meta.requiresAuth && to.meta.role && auth.userRole !== to.meta.role) {
+    return { name: 'access-denied' }
   }
 
-  // Check if route is for guests only (login, register)
-  if (to.meta.guestOnly) {
-    if (isAuthenticated) {
-      return getRoleRedirect()
-    }
+  if (to.meta.guestOnly && auth.isAuthenticated) {
+    return auth.dashboardRoute
   }
 
-  // No redirect needed
   return true
 })
 

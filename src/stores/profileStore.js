@@ -15,17 +15,82 @@ const SKILL_COLORS = [
 function normalize(profile) {
   if (!profile) return null
   const safe = { ...profile }
-  for (const k of ['skills', 'experience', 'education']) {
-    if (typeof safe[k] === 'string') {
-      try {
-        safe[k] = JSON.parse(safe[k])
-      } catch {
-        safe[k] = []
-      }
-    }
-    if (!Array.isArray(safe[k])) safe[k] = []
+  safe.skills = normalizeSkills(safe.skills)
+  for (const k of ['experience', 'education']) {
+    safe[k] = normalizeArrayField(safe[k])
   }
+  safe.profile_picture = normalizeStorageUrl(safe.profile_picture)
+  safe.resume = normalizeStorageUrl(safe.resume)
   return safe
+}
+
+function apiOrigin() {
+  const baseUrl =
+    import.meta.env.VITE_API_URL?.trim() || 'http://127.0.0.1:8000/api'
+  return baseUrl.replace(/\/api\/?$/, '')
+}
+
+function normalizeStorageUrl(path) {
+  if (!path || typeof path !== 'string') return path
+  if (/^(https?:)?\/\//.test(path) || path.startsWith('blob:')) return path
+
+  const cleanPath = path.replace(/^\/+/, '')
+  if (cleanPath.startsWith('storage/')) return `${apiOrigin()}/${cleanPath}`
+  return `${apiOrigin()}/storage/${cleanPath}`
+}
+
+function normalizeArrayField(value) {
+  if (Array.isArray(value)) return value
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value)
+      return Array.isArray(parsed) ? parsed : []
+    } catch {
+      return []
+    }
+  }
+  return []
+}
+
+function normalizeSkills(value) {
+  const raw = normalizeArrayField(value)
+  if (raw.length) {
+    return raw.map((skill) => String(skill).trim()).filter(Boolean)
+  }
+  if (typeof value === 'string') {
+    return value
+      .split(/[\n,]/)
+      .map((skill) => skill.trim())
+      .filter(Boolean)
+  }
+  return []
+}
+
+function appendFormValue(fd, key, value) {
+  if (value === undefined || value === null) return
+
+  if (Array.isArray(value)) {
+    value.forEach((item, index) => {
+      if (item === undefined || item === null) return
+      if (typeof item === 'object') {
+        Object.entries(item).forEach(([childKey, childValue]) => {
+          if (childValue !== undefined && childValue !== null) {
+            fd.append(`${key}[${index}][${childKey}]`, childValue)
+          }
+        })
+      } else {
+        fd.append(`${key}[]`, item)
+      }
+    })
+    return
+  }
+
+  if (typeof value === 'object') {
+    fd.append(key, JSON.stringify(value))
+    return
+  }
+
+  fd.append(key, value)
 }
 
 export const useProfileStore = defineStore('profile', () => {
@@ -76,12 +141,7 @@ export const useProfileStore = defineStore('profile', () => {
   function buildFormData(fields, files = {}) {
     const fd = new FormData()
     for (const [k, v] of Object.entries(fields)) {
-      if (v === undefined || v === null) continue
-      if (Array.isArray(v) || typeof v === 'object') {
-        fd.append(k, JSON.stringify(v))
-      } else {
-        fd.append(k, v)
-      }
+      appendFormValue(fd, k, v)
     }
     for (const [k, file] of Object.entries(files)) {
       if (file) fd.append(k, file)

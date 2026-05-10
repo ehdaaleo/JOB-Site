@@ -2,15 +2,22 @@
 import { computed } from 'vue'
 import { useApplicationStore } from '../../stores/applicationStore'
 import { useToast } from 'vue-toastification'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import Navbar from '@/components/homePageComponents/navbar.vue'
 import Footer from '@/components/homePageComponents/footer.vue'
 
 const applicationStore = useApplicationStore()
 const toast = useToast()
+const { confirmDialog } = useConfirmDialog()
 const savedJobs = computed(() => applicationStore.savedJobs)
 
-const removeSaved = (job) => {
-  if (!confirm('Remove this job from saved?')) return
+const removeSaved = async (job) => {
+  const confirmed = await confirmDialog({
+    title: 'Remove saved job',
+    message: 'Remove this job from saved?',
+    confirmText: 'Remove',
+  })
+  if (!confirmed) return
   applicationStore.unsaveJob(job.id)
   toast.info('Removed from saved jobs.')
 }

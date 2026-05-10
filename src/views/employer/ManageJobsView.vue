@@ -3,11 +3,13 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { jobApi, apiErrorMessage } from '@/services/api'
 import { useToast } from 'vue-toastification'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import Navbar from '@/components/homePageComponents/navbar.vue'
 import Footer from '@/components/homePageComponents/footer.vue'
 
 const router = useRouter()
 const toast = useToast()
+const { confirmDialog } = useConfirmDialog()
 
 const myJobs = ref([])
 const isLoading = ref(true)
@@ -43,7 +45,12 @@ const handleViewApplications = (jobId) =>
   router.push({ name: 'view-applications', query: { job: jobId } })
 
 const handleDeleteJob = async (jobId) => {
-  if (!confirm('Delete this job posting?')) return
+  const confirmed = await confirmDialog({
+    title: 'Delete job',
+    message: 'Delete this job posting?',
+    confirmText: 'Delete',
+  })
+  if (!confirmed) return
   try {
     await jobApi.destroy(jobId)
     myJobs.value = myJobs.value.filter((j) => String(j.id) !== String(jobId))

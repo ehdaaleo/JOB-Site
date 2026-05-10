@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { jobApi, apiErrorMessage } from '@/services/api'
 import { useToast } from 'vue-toastification'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import Navbar from '@/components/homePageComponents/navbar.vue'
 import Footer from '@/components/homePageComponents/footer.vue'
 
@@ -11,6 +12,7 @@ const error = ref(null)
 const selectedJob = ref(null)
 const showModal = ref(false)
 const toast = useToast()
+const { confirmDialog } = useConfirmDialog()
 
 async function load() {
   isLoading.value = true
@@ -47,7 +49,12 @@ const approveJob = async (job) => {
 }
 
 const rejectJob = async (job) => {
-  if (!confirm('Reject this job?')) return
+  const confirmed = await confirmDialog({
+    title: 'Reject job',
+    message: 'Reject this job?',
+    confirmText: 'Reject',
+  })
+  if (!confirmed) return
   try {
     await jobApi.reject(job.id)
     pendingJobs.value = pendingJobs.value.filter((j) => j.id !== job.id)

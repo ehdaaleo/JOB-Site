@@ -3,11 +3,13 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { adminApi, apiErrorMessage } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from 'vue-toastification'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import Navbar from '@/components/homePageComponents/navbar.vue'
 import Footer from '@/components/homePageComponents/footer.vue'
 
 const authStore = useAuthStore()
 const toast = useToast()
+const { confirmDialog } = useConfirmDialog()
 
 const users = ref([])
 const isLoading = ref(true)
@@ -61,7 +63,12 @@ const deleteUser = async (user) => {
     toast.warning('You cannot delete yourself.')
     return
   }
-  if (!confirm(`Delete ${user.name}? This will cascade-delete their jobs and applications.`)) return
+  const confirmed = await confirmDialog({
+    title: 'Delete user',
+    message: `Delete ${user.name}? This will cascade-delete their jobs and applications.`,
+    confirmText: 'Delete',
+  })
+  if (!confirmed) return
   try {
     await adminApi.deleteUser(user.id)
     users.value = users.value.filter((u) => u.id !== user.id)

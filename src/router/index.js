@@ -193,6 +193,12 @@ const router = createRouter({
           name: 'user-management',
           component: () => import('../views/admin/UserManagementView.vue'),
         },
+        {
+          path: 'categories',
+          name: 'category-management',
+          component: () =>
+            import('../views/admin/CategoryManagementView.vue'),
+        },
       ],
     },
 

@@ -28,7 +28,10 @@ http.interceptors.request.use((config) => {
     localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY)
   if (token) config.headers.Authorization = `Bearer ${token}`
   // Let axios pick the right Content-Type for FormData uploads.
-  if (config.data instanceof FormData) delete config.headers['Content-Type']
+  if (config.data instanceof FormData) {
+    delete config.headers['Content-Type']
+    delete config.headers['content-type']
+  }
   return config
 })
 
@@ -155,6 +158,34 @@ export const commentApi = {
       .then((r) => r.data),
   destroy: (jobId, commentId) =>
     http.delete(`/jobs/${jobId}/comments/${commentId}`).then((r) => r.data),
+  reject: async (commentId, jobId) => {
+    const attempts = [
+      jobId && {
+        method: 'delete',
+        url: `/jobs/${jobId}/comments/${commentId}`,
+      },
+      { method: 'delete', url: `/comments/${commentId}` },
+      { method: 'post', url: `/comments/${commentId}/reject` },
+      jobId && {
+        method: 'post',
+        url: `/jobs/${jobId}/comments/${commentId}/reject`,
+      },
+    ].filter(Boolean)
+
+    const failures = []
+    for (const attempt of attempts) {
+      try {
+        const res = await http.request(attempt)
+        return res.data
+      } catch (err) {
+        failures.push(`${attempt.method.toUpperCase()} ${attempt.url}`)
+        const status = err?.response?.status
+        if (![404, 405].includes(status)) throw err
+      }
+    }
+
+    throw new Error(`No reject route matched. Tried: ${failures.join(', ')}`)
+  },
   approve: (commentId) =>
     http.post(`/comments/${commentId}/approve`).then((r) => r.data),
 }

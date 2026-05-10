@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { commentApi, apiErrorMessage } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from 'vue-toastification'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 
 const props = defineProps({
   jobId: {
@@ -15,6 +16,7 @@ const props = defineProps({
 const router = useRouter()
 const authStore = useAuthStore()
 const toast = useToast()
+const { confirmDialog } = useConfirmDialog()
 
 const comments = ref([])
 const isLoading = ref(false)
@@ -79,7 +81,12 @@ const postComment = async () => {
 }
 
 const deleteComment = async (comment) => {
-  if (!confirm('Delete this comment?')) return
+  const confirmed = await confirmDialog({
+    title: 'Delete comment',
+    message: 'Delete this comment?',
+    confirmText: 'Delete',
+  })
+  if (!confirmed) return
   try {
     await commentApi.destroy(props.jobId, comment.id)
     comments.value = comments.value.filter((c) => c.id !== comment.id)

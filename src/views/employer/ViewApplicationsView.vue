@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useApplicationStore } from '../../stores/applicationStore'
 import { jobApi, applicationApi, apiErrorMessage } from '@/services/api'
 import { useToast } from 'vue-toastification'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import Navbar from '@/components/homePageComponents/navbar.vue'
 import Footer from '@/components/homePageComponents/footer.vue'
 
@@ -11,6 +12,7 @@ const route = useRoute()
 const router = useRouter()
 const applicationStore = useApplicationStore()
 const toast = useToast()
+const { promptDialog } = useConfirmDialog()
 
 const myJobs = ref([])
 const selectedJobId = ref(route.query.job ? Number(route.query.job) : null)
@@ -82,10 +84,19 @@ const setStatus = async (app, status, reason = null) => {
 const acceptApplication = (app) => setStatus(app, 'accepted')
 const reviewApplication = (app) => setStatus(app, 'reviewed')
 const shortlistApplication = (app) => setStatus(app, 'shortlisted')
-const rejectApplication = (app) => {
-  const reason = prompt('Reason for rejection (optional):') || null
-  if (!confirm('Reject this application?')) return
-  setStatus(app, 'rejected', reason)
+const rejectApplication = async (app) => {
+  const result = await promptDialog({
+    title: 'Reject application',
+    message: 'Reject this application?',
+    confirmText: 'Reject',
+    input: {
+      type: 'textarea',
+      label: 'Reason for rejection (optional)',
+      placeholder: 'Add a short reason',
+    },
+  })
+  if (!result.confirmed) return
+  setStatus(app, 'rejected', result.value?.trim() || null)
 }
 
 const goToCheckout = (app) => {

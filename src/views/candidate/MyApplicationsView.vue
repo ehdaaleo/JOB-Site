@@ -2,11 +2,13 @@
 import { ref, computed, onMounted } from 'vue'
 import { useApplicationStore } from '../../stores/applicationStore'
 import { useToast } from 'vue-toastification'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import Navbar from '@/components/homePageComponents/navbar.vue'
 import Footer from '@/components/homePageComponents/footer.vue'
 
 const applicationStore = useApplicationStore()
 const toast = useToast()
+const { confirmDialog } = useConfirmDialog()
 
 const statusFilter = ref('')
 const selectedApp = ref(null)
@@ -52,7 +54,12 @@ const viewDetails = (app) => {
 }
 
 const withdrawApplication = async (app) => {
-  if (!confirm('Are you sure you want to withdraw this application?')) return
+  const confirmed = await confirmDialog({
+    title: 'Withdraw application',
+    message: 'Are you sure you want to withdraw this application?',
+    confirmText: 'Withdraw',
+  })
+  if (!confirmed) return
   try {
     await applicationStore.withdrawApplication(app.job_id || app.job?.id, app.id)
     toast.success('Application withdrawn.')

@@ -15,6 +15,7 @@ const isSaving = ref(false)
 const newSkill = ref('')
 const resumeFile = ref(null)
 const pictureFile = ref(null)
+const picturePreview = ref('')
 
 const editForm = ref({
   title: '',
@@ -36,6 +37,19 @@ const isOwner = computed(() => true) // /profile always returns the current user
 const fullName = computed(() => user.value?.name || 'Your name')
 const email = computed(() => user.value?.email || '')
 
+const normalizeSkillList = (skills) => {
+  if (Array.isArray(skills)) {
+    return skills.map((skill) => String(skill).trim()).filter(Boolean)
+  }
+  if (typeof skills === 'string') {
+    return skills
+      .split(/[\n,]/)
+      .map((skill) => skill.trim())
+      .filter(Boolean)
+  }
+  return []
+}
+
 const startEdit = () => {
   if (!profile.value) return
   editForm.value = {
@@ -46,7 +60,7 @@ const startEdit = () => {
     linkedin_profile: profile.value.linkedin_profile || '',
     github_profile: profile.value.github_profile || '',
     bio: profile.value.bio || '',
-    skills: [...(profile.value.skills || [])],
+    skills: normalizeSkillList(profile.value.skills),
     experience: [...(profile.value.experience || [])],
     education: [...(profile.value.education || [])],
   }
@@ -57,13 +71,17 @@ const cancelEdit = () => {
   isEditing.value = false
   resumeFile.value = null
   pictureFile.value = null
+  if (picturePreview.value) URL.revokeObjectURL(picturePreview.value)
+  picturePreview.value = ''
   newSkill.value = ''
 }
 
 const addSkill = () => {
-  const s = newSkill.value.trim()
-  if (!s) return
-  if (!editForm.value.skills.includes(s)) editForm.value.skills.push(s)
+  const skills = normalizeSkillList(newSkill.value)
+  if (!skills.length) return
+  skills.forEach((skill) => {
+    if (!editForm.value.skills.includes(skill)) editForm.value.skills.push(skill)
+  })
   newSkill.value = ''
 }
 
@@ -88,25 +106,54 @@ const onResumeChange = (e) => {
   resumeFile.value = e.target.files?.[0] || null
 }
 const onPictureChange = (e) => {
-  pictureFile.value = e.target.files?.[0] || null
+  const file = e.target.files?.[0] || null
+  pictureFile.value = null
+  if (picturePreview.value) URL.revokeObjectURL(picturePreview.value)
+  picturePreview.value = ''
+
+  if (!file) return
+
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/gif']
+  if (!allowedTypes.includes(file.type)) {
+    toast.error('Profile picture must be a JPG, PNG, or GIF image.')
+    e.target.value = ''
+    return
+  }
+
+  const maxSize = 2 * 1024 * 1024
+  if (file.size > maxSize) {
+    toast.error('Profile picture must be smaller than 2 MB.')
+    e.target.value = ''
+    return
+  }
+
+  pictureFile.value = file
+  picturePreview.value = URL.createObjectURL(file)
 }
 
 const save = async () => {
+  addSkill()
   isSaving.value = true
   try {
+    const payload = {
+      ...editForm.value,
+      skills: normalizeSkillList(editForm.value.skills),
+    }
     if (resumeFile.value || pictureFile.value) {
       await profileStore.uploadFiles({
-        ...editForm.value,
+        ...payload,
         resume: resumeFile.value,
         profilePicture: pictureFile.value,
       })
     } else {
-      await profileStore.updateProfile(editForm.value)
+      await profileStore.updateProfile(payload)
     }
     toast.success('Profile saved.')
     isEditing.value = false
     resumeFile.value = null
     pictureFile.value = null
+    if (picturePreview.value) URL.revokeObjectURL(picturePreview.value)
+    picturePreview.value = ''
   } catch {
     toast.error(profileStore.error || 'Failed to save profile.')
   } finally {
@@ -149,7 +196,7 @@ onMounted(() => profileStore.fetchProfile())
           <div class="bg-white rounded-xl border border-gray-200 p-6">
             <div class="text-center mb-6">
               <div class="w-24 h-24 mx-auto rounded-full overflow-hidden bg-blue-100 flex items-center justify-center text-blue-700 text-3xl font-bold">
-                <img v-if="profile?.profile_picture" :src="profile.profile_picture" :alt="fullName" class="w-full h-full object-cover" />
+                <img v-if="picturePreview || profile?.profile_picture" :src="picturePreview || profile.profile_picture" :alt="fullName" class="w-full h-full object-cover" />
                 <span v-else>{{ fullName.charAt(0) }}</span>
               </div>
               <h2 class="text-xl font-semibold text-gray-900 mt-3">{{ fullName }}</h2>
@@ -190,8 +237,8 @@ onMounted(() => profileStore.fetchProfile())
               <div v-else class="space-y-2">
                 <label class="text-sm text-gray-600 block">Upload resume (PDF/DOC, max 10 MB)</label>
                 <input type="file" accept=".pdf,.doc,.docx" @change="onResumeChange" class="text-sm" />
-                <label class="text-sm text-gray-600 block mt-3">Profile picture (max 2 MB)</label>
-                <input type="file" accept="image/*" @change="onPictureChange" class="text-sm" />
+                <label class="text-sm text-gray-600 block mt-3">Profile picture (JPG, PNG, GIF, max 2 MB)</label>
+                <input type="file" accept="image/jpeg,image/png,image/gif" @change="onPictureChange" class="text-sm" />
               </div>
             </div>
           </div>
@@ -215,12 +262,12 @@ onMounted(() => profileStore.fetchProfile())
               <div class="flex flex-wrap gap-2 mb-3">
                 <span v-for="skill in editForm.skills" :key="skill" class="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium flex items-center gap-1">
                   {{ skill }}
-                  <button @click="removeSkill(skill)" class="text-blue-400 hover:text-blue-600">×</button>
+                  <button type="button" @click="removeSkill(skill)" class="text-blue-400 hover:text-blue-600">×</button>
                 </span>
               </div>
               <div class="flex gap-2">
-                <input v-model="newSkill" type="text" placeholder="Add skill" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg" @keyup.enter="addSkill">
-                <button @click="addSkill" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Add</button>
+                <input v-model="newSkill" type="text" placeholder="Add skill, or paste comma-separated skills" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg" @keyup.enter.prevent="addSkill">
+                <button type="button" @click="addSkill" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Add</button>
               </div>
             </div>
           </div>

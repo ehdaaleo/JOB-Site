@@ -1,4 +1,5 @@
 <template>
+  <Navbar />
   <div class="min-height flex flex-col items-center justify-center p-6 bg-slate-50">
     <div class="max-w-md w-full text-center space-y-6">
       <!-- Icon Container -->
@@ -38,6 +39,7 @@
 
 <script setup>
 import { useRouter } from 'vue-router'
+import Navbar from '@/components/homePageComponents/navbar.vue'
 
 const router = useRouter()
 

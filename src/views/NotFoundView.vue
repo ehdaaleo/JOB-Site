@@ -1,8 +1,10 @@
 <script setup>
 import { RouterLink } from 'vue-router'
+import Navbar from '@/components/homePageComponents/navbar.vue'
 </script>
 
 <template>
+  <Navbar />
   <div class="not-found-view">
     <div class="not-found-content">
       <div class="error-code">404</div>
@@ -17,11 +19,11 @@ import { RouterLink } from 'vue-router'
 
 <style scoped>
 .not-found-view {
-  min-height: 100vh;
+  min-height: calc(100vh - 64px);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 40px 24px;
+  padding: 104px 24px 40px;
   background: #F9FAFB;
 }
 

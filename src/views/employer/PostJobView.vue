@@ -1,6 +1,6 @@
 <script setup>
-import { ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, watch, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import JobPostTopBar from '@/components/jobPostComponents/PostTopBar.vue'
 import JobPostProgress from '@/components/jobPostComponents/PostProgress.vue'
 import JobPostBasics from '@/components/jobPostComponents/PostBasics.vue'
@@ -12,9 +12,17 @@ import JobPostFooter from '@/components/jobPostComponents/PostFooter.vue'
 import Navbar from '@/components/homePageComponents/navbar.vue'
 import Footer from '@/components/homePageComponents/footer.vue'
 import { useJobStore } from '@/stores/jobStore'
+import { useAuthStore } from '@/stores/auth'
+import { categoryApi, apiErrorMessage } from '@/services/api'
+import { useToast } from 'vue-toastification'
 
 const router = useRouter()
+const route = useRoute()
 const jobStore = useJobStore()
+const authStore = useAuthStore()
+const toast = useToast()
+
+const editingId = computed(() => route.params.id || null)
 
 const currentStep = ref(0)
 const steps = ref([
@@ -24,30 +32,31 @@ const steps = ref([
   { label: 'Review' }
 ])
 
-const employer = ref({
-  logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSEgKtZiO3hayBevddOML4GOzKQYi-qX24gPg&s',
-  name: 'ITI',
-  email: 'iti_menya@iti.com',
-  location: 'Menya, Egypt',
-  verified: true
+const employer = computed(() => {
+  const u = authStore.user || {}
+  return {
+    logo: u.company_logo || null,
+    name: u.company_name || u.organization || u.name || 'You',
+    email: u.email || '',
+    location: u.location || '',
+    verified: !!u.company_name,
+  }
 })
 
-const categories = ref([
-  { id: 1, name: 'Software Development' },
-  { id: 2, name: 'Design & Creative' },
-  { id: 3, name: 'Marketing & SEO' },
-  { id: 4, name: 'Sales & Communication' },
-  { id: 5, name: 'Finance & Accounting' },
-  { id: 6, name: 'HR & Recruiting' },
-  { id: 7, name: 'Customer Support' },
-  { id: 8, name: 'Other' }
-])
+const categories = ref([])
+async function loadCategories() {
+  try {
+    const res = await categoryApi.list()
+    categories.value = res.data || res || []
+  } catch {
+    categories.value = []
+  }
+}
 
 const form = ref({
   title: '',
   category_id: '',
   work_type: '',
-  type: '',
   location: '',
   application_deadline: '',
   experience_level: '',
@@ -57,8 +66,7 @@ const form = ref({
   benefits: [''],
   salary_min: null,
   salary_max: null,
-  salary_period: '',
-  technologies: []
+  technologies: [],
 })
 
 const getCategoryName = (id) => {
@@ -121,22 +129,21 @@ const validateStep = (step) => {
     if (!form.value.title?.trim()) { errors.value.title = 'Job title is required'; isValid = false }
     if (!form.value.category_id) { errors.value.category_id = 'Category is required'; isValid = false }
     if (!form.value.work_type) { errors.value.work_type = 'Work type is required'; isValid = false }
-    if (!form.value.type) { errors.value.type = 'Job type is required'; isValid = false }
+    if (!form.value.experience_level) { errors.value.experience_level = 'Experience level is required'; isValid = false }
     if (form.value.work_type !== 'remote' && !form.value.location?.trim()) { errors.value.location = 'Location is required'; isValid = false }
   } else if (step === 1) {
     if (!form.value.description?.trim()) { errors.value.description = 'Description is required'; isValid = false }
-    
-    const validResps = form.value.responsibilities.filter(r => r.trim() !== '')
+
+    const validResps = form.value.responsibilities.filter((r) => r.trim() !== '')
     if (validResps.length === 0) { errors.value.responsibilities = 'At least one responsibility is required'; isValid = false }
-    
-    const validReqs = form.value.requirements.filter(r => r.trim() !== '')
+
+    const validReqs = form.value.requirements.filter((r) => r.trim() !== '')
     if (validReqs.length === 0) { errors.value.requirements = 'At least one requirement is required'; isValid = false }
   } else if (step === 2) {
     if (!form.value.salary_min) { errors.value.salary_min = 'Min salary is required'; isValid = false }
     if (!form.value.salary_max) { errors.value.salary_max = 'Max salary is required'; isValid = false }
-    else if (form.value.salary_min > form.value.salary_max) { errors.value.salary_max = 'Max salary must be greater than min salary'; isValid = false }
-    if (!form.value.salary_period) { errors.value.salary_period = 'Salary period is required'; isValid = false }
-    
+    else if (Number(form.value.salary_min) > Number(form.value.salary_max)) { errors.value.salary_max = 'Max salary must be greater than min salary'; isValid = false }
+
     if (form.value.technologies.length === 0) { errors.value.technologies = 'At least one technology is required'; isValid = false }
   }
 
@@ -168,46 +175,77 @@ const handleStepClick = (index) => {
 const submitting = ref(false)
 const submitted = ref(false)
 
-const submitJob = () => {
+const joinLines = (xs) =>
+  Array.isArray(xs)
+    ? xs.filter(Boolean).map((l) => `- ${l}`).join('\n')
+    : (xs || '')
+
+const submitJob = async () => {
+  if (!validateStep(currentStep.value)) return
   submitting.value = true
-  const workTypeMap = { 'remote': 'Remote', 'on-site': 'On-site', 'hybrid': 'Hybrid' }
-  const formattedLocation = form.value.location ? form.value.location.split(',').map(part => part.trim().charAt(0).toUpperCase() + part.trim().slice(1)).join(', ') : ''
-  const experienceMap = { 'Entry': 'Entry (0-2 years)', 'Mid': 'Mid (2-5 years)', 'Senior': 'Senior (5+ years)', 'Lead': 'Lead (8+ years)' }
+  try {
+    const payload = {
+      title: form.value.title,
+      description: form.value.description,
+      category_id: Number(form.value.category_id),
+      location: form.value.location || null,
+      work_type: form.value.work_type,
+      experience_level: form.value.experience_level || 'mid',
+      salary_min: form.value.salary_min || null,
+      salary_max: form.value.salary_max || null,
+      responsibilities: joinLines(form.value.responsibilities).slice(0, 5000) || null,
+      requirements: joinLines(form.value.requirements).slice(0, 5000) || null,
+      benefits: joinLines(form.value.benefits).slice(0, 5000) || null,
+      application_deadline: form.value.application_deadline || null,
+    }
 
-  jobStore.addJob({
-    title: form.value.title,
-    description: form.value.description,
-    responsibilities: form.value.responsibilities,
-    requirements: form.value.requirements,
-    benefits: form.value.benefits,
-    skills: form.value.technologies,
-    company: {
-      id: Date.now(),
-      name: employer.value.name,
-      email: employer.value.email,
-      location: employer.value.location,
-      logo: employer.value.logo,
-      verified: employer.value.verified
-    },
-    category: getCategoryName(form.value.category_id),
-    workType: workTypeMap[form.value.work_type] || form.value.work_type,
-    location: formattedLocation,
-    experienceLevel: experienceMap[form.value.experience_level] || form.value.experience_level,
-    salaryMin: form.value.salary_min,
-    salaryMax: form.value.salary_max,
-    deadline: form.value.application_deadline,
-    type: 'full-time',
-    salaryCurrency: 'USD',
-    salaryPeriod: 'yearly',
-    comments: []
-  })
-
-  submitted.value = true
-  setTimeout(() => {
-    submitted.value = false
-    router.push('/employer/dashboard')
-  }, 2000)
+    if (editingId.value) {
+      await jobStore.updateJob(editingId.value, payload)
+      toast.success('Job updated.')
+    } else {
+      await jobStore.createJob(payload)
+      toast.success('Job posted! It will be visible after admin approval.')
+    }
+    submitted.value = true
+    setTimeout(() => {
+      submitted.value = false
+      router.push('/employer/manage-jobs')
+    }, 1200)
+  } catch (err) {
+    toast.error(apiErrorMessage(err, 'Failed to save job.'))
+  } finally {
+    submitting.value = false
+  }
 }
+
+onMounted(async () => {
+  await loadCategories()
+  if (editingId.value) {
+    const job = await jobStore.fetchJobById(editingId.value)
+    if (!job) return
+    form.value = {
+      title: job.title || '',
+      category_id: job.category_id || job.category?.id || '',
+      work_type: job.work_type || '',
+      location: job.location || '',
+      application_deadline: job.application_deadline || '',
+      experience_level: job.experience_level || '',
+      description: job.description || '',
+      responsibilities: typeof job.responsibilities === 'string'
+        ? job.responsibilities.split('\n').map(s => s.replace(/^-\s*/, '')).filter(Boolean)
+        : (job.responsibilities || ['']),
+      requirements: typeof job.requirements === 'string'
+        ? job.requirements.split('\n').map(s => s.replace(/^-\s*/, '')).filter(Boolean)
+        : (job.requirements || ['']),
+      benefits: typeof job.benefits === 'string'
+        ? job.benefits.split('\n').map(s => s.replace(/^-\s*/, '')).filter(Boolean)
+        : (job.benefits || ['']),
+      salary_min: job.salary_min || null,
+      salary_max: job.salary_max || null,
+      technologies: (job.technologies || []).map((t) => t.name || t),
+    }
+  }
+})
 </script>
 
 <template>

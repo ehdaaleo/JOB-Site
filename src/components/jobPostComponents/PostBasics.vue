@@ -7,15 +7,15 @@ defineProps({
   errors: Object
 })
 const emit = defineEmits(['update:modelValue'])
+// Values match the Laravel work_type enum exactly so no mapping is needed.
 const workTypes = [
   { label: 'Remote', value: 'remote' },
-  { label: 'On-site', value: 'on-site' },
+  { label: 'On-site', value: 'onsite' },
   { label: 'Hybrid', value: 'hybrid' },
-]
-const jobTypes = [
-  { label: 'Full-time', value: 'Full-time' },
-  { label: 'Part-time', value: 'Part-time' },
-  { label: 'Freelance', value: 'Freelance' },
+  { label: 'Full-time', value: 'full_time' },
+  { label: 'Part-time', value: 'part_time' },
+  { label: 'Contract', value: 'contract' },
+  { label: 'Internship', value: 'internship' },
 ]
 </script>
 
@@ -55,17 +55,6 @@ const jobTypes = [
         <p v-if="errors.work_type" class="text-red-500 text-[14px] font-medium mt-[2px]">{{ errors.work_type }}</p>
       </div>
 
-      <div class="flex flex-col gap-[6px]">
-        <label class="text-[15px] font-semibold text-slate-700 tracking-[0.2px]">Job Type <span class="text-blue-600">*</span></label>
-        <CustomSelect
-          v-model="modelValue.type"
-          :options="jobTypes"
-          placeholder="Select job type"
-          :error="errors.type"
-        />
-        <p v-if="errors.type" class="text-red-500 text-[14px] font-medium mt-[2px]">{{ errors.type }}</p>
-      </div>
-
        <div v-if="modelValue.work_type !== 'remote'" class="flex flex-col gap-[6px]">
         <label class="text-[15px] font-semibold text-slate-700 tracking-[0.2px]">Location <span class="text-blue-600">*</span></label>
         <input v-model="modelValue.location" type="text" placeholder="Cairo..." class="w-full bg-slate-50 border border-slate-200 rounded-lg text-slate-900 text-[16px] px-[14px] py-[10px] outline-none transition-all duration-200 focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/15 focus:bg-white placeholder:text-slate-400" :class="{ 'border-red-400 focus:border-red-500 focus:ring-red-500/15': errors.location }" />
@@ -81,16 +70,22 @@ const jobTypes = [
         <label class="text-[15px] font-semibold text-slate-700 tracking-[0.2px]">Experience Level</label>
         <div class="flex flex-wrap gap-[8px]">
           <button
-            v-for="lvl in ['Entry', 'Mid', 'Senior', 'Lead']"
-            :key="lvl"
+            v-for="lvl in [
+              { value: 'entry', label: 'Entry' },
+              { value: 'junior', label: 'Junior' },
+              { value: 'mid', label: 'Mid' },
+              { value: 'senior', label: 'Senior' },
+              { value: 'lead', label: 'Lead' }
+            ]"
+            :key="lvl.value"
             type="button"
             class="px-[16px] py-[8px] rounded-full border text-[15px] font-medium transition-all duration-150"
             :class="{
-              'border-blue-600 bg-blue-50 text-blue-600 shadow-[0_2px_10px_rgba(37,99,235,0.1)]': modelValue.experience_level === lvl,
-              'border-slate-300 bg-white text-slate-600 hover:border-blue-400 hover:text-blue-500': modelValue.experience_level !== lvl
+              'border-blue-600 bg-blue-50 text-blue-600 shadow-[0_2px_10px_rgba(37,99,235,0.1)]': modelValue.experience_level === lvl.value,
+              'border-slate-300 bg-white text-slate-600 hover:border-blue-400 hover:text-blue-500': modelValue.experience_level !== lvl.value
             }"
-            @click="modelValue.experience_level = lvl"
-          >{{ lvl }}</button>
+            @click="modelValue.experience_level = lvl.value"
+          >{{ lvl.label }}</button>
         </div>
       </div>
     </div>

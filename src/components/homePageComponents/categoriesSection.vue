@@ -1,14 +1,14 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { fetchCategories } from '../../services/api'
+import { categoryApi } from '@/services/api'
 
 const categories = ref([])
 const isLoading = ref(true)
 
 onMounted(async () => {
   try {
-    const response = await fetchCategories()
-    categories.value = response.data
+    const res = await categoryApi.list()
+    categories.value = res.data || res || []
   } catch (err) {
     console.error(err)
   } finally {
@@ -57,7 +57,7 @@ const getColor = (index) => colors[index % colors.length]
 
       <!-- Grid - All Visible -->
       <div v-else class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <a v-for="(category, index) in categories" :key="category.id" :href="`/jobs?category=${category.slug}`" 
+        <a v-for="(category, index) in categories" :key="category.id" :href="`/jobs?category_id=${category.id}`" 
            class="bg-white rounded-xl p-5 border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all text-center">
           <div :class="`w-12 h-12 mx-auto mb-3 rounded-xl bg-gradient-to-br ${getColor(index)} flex items-center justify-center text-white`">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -66,7 +66,6 @@ const getColor = (index) => colors[index % colors.length]
           </div>
           <h3 class="font-semibold text-gray-900 text-sm">{{ category.name }}</h3>
           <p class="text-xs text-gray-500 mt-1">{{ getDescription(category.slug) }}</p>
-          <p class="text-xs font-medium text-blue-600 mt-2">{{ category.jobCount }} jobs</p>
         </a>
       </div>
     </div>

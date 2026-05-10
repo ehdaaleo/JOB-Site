@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
-import { fetchCompanies } from '@/services/api'
+import { companyApi, apiErrorMessage } from '@/services/api'
 import Navbar from '@/components/homePageComponents/navbar.vue'
 import Footer from '@/components/homePageComponents/footer.vue'
 
@@ -13,44 +13,40 @@ const fetchEmployers = async () => {
   loading.value = true
   error.value = null
   try {
-    const response = await fetchCompanies()
-    employers.value = response.data
+    const res = await companyApi.list({ per_page: 24 })
+    employers.value = res.data || []
   } catch (err) {
-    console.error('Failed to fetch employers:', err)
-    error.value = 'Failed to load companies. Please check your network connection.'
+    error.value = apiErrorMessage(err, 'Failed to load companies.')
   } finally {
     loading.value = false
   }
 }
 
-// Helpers for extracting varied data from employer profiles
+// The /api/companies payload exposes employer fields directly. These
+// helpers fall back across snake_case/camelCase to keep the template
+// resilient to small backend reshuffles.
 const getCompanyName = (emp) =>
-  emp.name || emp.company?.name || emp.organization || emp.company_name || 'Unnamed Company'
-const getIndustry = (emp) => emp.industry || emp.company?.industry || null
-const getLocation = (emp) => emp.location || emp.company?.location || null
-const getSize = (emp) => emp.size || emp.company?.size || emp.companySize || (emp.jobCount ? Math.floor(emp.jobCount * 2) + 10 : null)
+  emp.company_name || emp.organization || emp.name || 'Unnamed Company'
+const getIndustry = (emp) => emp.industry || null
+const getLocation = (emp) => emp.location || null
+const getSize = (emp) => emp.company_size || null
 const getDescription = (emp) =>
-   emp.tagline || emp.company?.description || emp.companyDescription || emp.bio || null
+  emp.company_description || emp.bio || null
 const getWebsite = (emp) => {
-   let site = emp.website || emp.company?.website || emp.companyWebsite || null
-  if (site && !site.startsWith('http')) {
-    site = 'https://' + site
-  }
+  let site = emp.company_website || null
+  if (site && !site.startsWith('http')) site = 'https://' + site
   return site
 }
+const getJobsCount = (emp) => emp.approved_jobs_count ?? null
 
 const getInitials = (name) => {
   if (!name) return 'C'
   const words = name.split(' ').filter((w) => w.length > 0)
-  if (words.length >= 2) {
-    return `${words[0][0]}${words[1][0]}`.toUpperCase()
-  }
+  if (words.length >= 2) return `${words[0][0]}${words[1][0]}`.toUpperCase()
   return name.substring(0, 2).toUpperCase()
 }
 
-onMounted(() => {
-  fetchEmployers()
-})
+onMounted(fetchEmployers)
 </script>
 
 <template>
@@ -148,7 +144,7 @@ onMounted(() => {
                     d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                   />
                 </svg>
-                {{ employer.employerType === 'individual' ? 'Individual' : 'Company' }}
+                {{ employer.employer_type === 'individual' ? 'Individual' : 'Company' }}<span v-if="getJobsCount(employer) != null"> · {{ getJobsCount(employer) }} jobs</span>
               </div>
             </div>
           </div>

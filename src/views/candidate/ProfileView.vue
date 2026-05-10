@@ -1,203 +1,319 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useProfileStore } from '../../stores/profileStore'
 import { useAuthStore } from '../../stores/auth'
-import Hero from '../../components/Hero.vue'
+import { useToast } from 'vue-toastification'
 import NavBar from '@/components/homePageComponents/navbar.vue'
 import Footer from '@/components/homePageComponents/footer.vue'
 
 const profileStore = useProfileStore()
 const authStore = useAuthStore()
-
-const profile = computed(() => profileStore.profile)
-const isOwner = computed(() => {
-  return authStore.user && authStore.user.email === profile.value.email
-})
+const toast = useToast()
 
 const isEditing = ref(false)
-const editData = ref({})
+const isSaving = ref(false)
 const newSkill = ref('')
+const resumeFile = ref(null)
+const pictureFile = ref(null)
+const picturePreview = ref('')
 
-const toggleEdit = () => {
-  if (isEditing.value) {
-    profileStore.updateProfile(editData.value)
-  } else {
-    editData.value = { ...profile.value }
+const editForm = ref({
+  title: '',
+  location: '',
+  phone: '',
+  website: '',
+  linkedin_profile: '',
+  github_profile: '',
+  bio: '',
+  skills: [],
+  experience: [],
+  education: [],
+})
+
+const profile = computed(() => profileStore.profile)
+const user = computed(() => authStore.user)
+const isOwner = computed(() => true) // /profile always returns the current user's profile
+
+const fullName = computed(() => user.value?.name || 'Your name')
+const email = computed(() => user.value?.email || '')
+
+const normalizeSkillList = (skills) => {
+  if (Array.isArray(skills)) {
+    return skills.map((skill) => String(skill).trim()).filter(Boolean)
   }
-  isEditing.value = !isEditing.value
+  if (typeof skills === 'string') {
+    return skills
+      .split(/[\n,]/)
+      .map((skill) => skill.trim())
+      .filter(Boolean)
+  }
+  return []
 }
 
-const saveProfile = () => {
-  profileStore.updateProfile(editData.value)
+const startEdit = () => {
+  if (!profile.value) return
+  editForm.value = {
+    title: profile.value.title || '',
+    location: profile.value.location || '',
+    phone: profile.value.phone || '',
+    website: profile.value.website || '',
+    linkedin_profile: profile.value.linkedin_profile || '',
+    github_profile: profile.value.github_profile || '',
+    bio: profile.value.bio || '',
+    skills: normalizeSkillList(profile.value.skills),
+    experience: [...(profile.value.experience || [])],
+    education: [...(profile.value.education || [])],
+  }
+  isEditing.value = true
+}
+
+const cancelEdit = () => {
   isEditing.value = false
-  alert('Profile saved successfully!')
+  resumeFile.value = null
+  pictureFile.value = null
+  if (picturePreview.value) URL.revokeObjectURL(picturePreview.value)
+  picturePreview.value = ''
+  newSkill.value = ''
 }
 
 const addSkill = () => {
-  if (newSkill.value.trim()) {
-    profileStore.addSkill(newSkill.value.trim())
-    newSkill.value = ''
-  }
+  const skills = normalizeSkillList(newSkill.value)
+  if (!skills.length) return
+  skills.forEach((skill) => {
+    if (!editForm.value.skills.includes(skill)) editForm.value.skills.push(skill)
+  })
+  newSkill.value = ''
 }
 
 const removeSkill = (skill) => {
-  profileStore.removeSkill(skill)
+  editForm.value.skills = editForm.value.skills.filter((s) => s !== skill)
 }
-const downloadResume = () => {
-  const link = document.createElement('a')
-  link.href = profile.value.resume
-  link.download = 'resume.pdf'
-  link.click()
+
+const addExperience = () => {
+  editForm.value.experience.push({ title: '', company: '', period: '', description: '' })
 }
+const removeExperience = (idx) => {
+  editForm.value.experience.splice(idx, 1)
+}
+const addEducation = () => {
+  editForm.value.education.push({ degree: '', school: '', year: '' })
+}
+const removeEducation = (idx) => {
+  editForm.value.education.splice(idx, 1)
+}
+
+const onResumeChange = (e) => {
+  resumeFile.value = e.target.files?.[0] || null
+}
+const onPictureChange = (e) => {
+  const file = e.target.files?.[0] || null
+  pictureFile.value = null
+  if (picturePreview.value) URL.revokeObjectURL(picturePreview.value)
+  picturePreview.value = ''
+
+  if (!file) return
+
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/gif']
+  if (!allowedTypes.includes(file.type)) {
+    toast.error('Profile picture must be a JPG, PNG, or GIF image.')
+    e.target.value = ''
+    return
+  }
+
+  const maxSize = 2 * 1024 * 1024
+  if (file.size > maxSize) {
+    toast.error('Profile picture must be smaller than 2 MB.')
+    e.target.value = ''
+    return
+  }
+
+  pictureFile.value = file
+  picturePreview.value = URL.createObjectURL(file)
+}
+
+const save = async () => {
+  addSkill()
+  isSaving.value = true
+  try {
+    const payload = {
+      ...editForm.value,
+      skills: normalizeSkillList(editForm.value.skills),
+    }
+    if (resumeFile.value || pictureFile.value) {
+      await profileStore.uploadFiles({
+        ...payload,
+        resume: resumeFile.value,
+        profilePicture: pictureFile.value,
+      })
+    } else {
+      await profileStore.updateProfile(payload)
+    }
+    toast.success('Profile saved.')
+    isEditing.value = false
+    resumeFile.value = null
+    pictureFile.value = null
+    if (picturePreview.value) URL.revokeObjectURL(picturePreview.value)
+    picturePreview.value = ''
+  } catch {
+    toast.error(profileStore.error || 'Failed to save profile.')
+  } finally {
+    isSaving.value = false
+  }
+}
+
+onMounted(() => profileStore.fetchProfile())
 </script>
 
 <template>
-  <div class="profile-view">
-    <!-- Hero Section -->
-    <!-- <Hero /> -->
-<NavBar />
-<div class="bg-slate-50 min-h-screen pb-20 pt-16">
-  <div class="container mx-auto px-4 py-8 max-w-7xl">
-    <!-- Header -->
-    <div class="bg-white border-b border-gray-200 px-6 py-4">
-      <div class="flex items-center justify-between">
+  <NavBar />
+  <div class="bg-slate-50 min-h-screen pb-20 pt-16">
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+      <div class="bg-white border border-gray-200 rounded-xl px-6 py-4 flex items-center justify-between">
         <div>
-          <h1 class="text-2xl font-bold text-gray-900">{{ isOwner ? 'My Profile' : profile.name + "'s Profile" }}</h1>
-          <p class="text-sm text-gray-500">{{ isOwner ? 'Manage your profile information' : 'View professional profile and experience' }}</p>
+          <h1 class="text-2xl font-bold text-gray-900">My Profile</h1>
+          <p class="text-sm text-gray-500">Manage your profile information</p>
         </div>
-        
         <div class="flex items-center gap-3">
-
-          <!-- Edit Profile Button (Owner Only) -->
-          <button v-if="isOwner && !isEditing" @click="toggleEdit" class="px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-bold text-sm shadow-sm transition-all flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+          <button v-if="!isEditing" @click="startEdit" class="px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-bold text-sm">
             Edit Profile
           </button>
-
-          <div v-if="isOwner && isEditing" class="flex gap-2">
-            <button @click="toggleEdit" class="px-5 py-2.5 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 font-bold text-sm transition-all">
+          <template v-else>
+            <button @click="cancelEdit" :disabled="isSaving" class="px-5 py-2.5 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 font-bold text-sm">
               Cancel
             </button>
-            <button @click="saveProfile" class="px-5 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 font-bold text-sm shadow-sm transition-all flex items-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
-              Save Changes
+            <button @click="save" :disabled="isSaving" class="px-5 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 font-bold text-sm">
+              {{ isSaving ? 'Saving…' : 'Save Changes' }}
             </button>
-          </div>
+          </template>
         </div>
       </div>
-    </div>
 
-    <div class="p-6">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Left Column - Basic Info -->
+      <div v-if="profileStore.isLoading && !profile" class="text-center py-16 text-gray-500">Loading profile…</div>
+
+      <div v-else class="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Sidebar -->
         <div class="lg:col-span-1">
           <div class="bg-white rounded-xl border border-gray-200 p-6">
             <div class="text-center mb-6">
-              <div class="w-24 h-24 mx-auto rounded-full overflow-hidden mb-4">
-                <img :src="profile.profile_picture" :alt="profile.name" class="w-full h-full object-cover" />
+              <div class="w-24 h-24 mx-auto rounded-full overflow-hidden bg-blue-100 flex items-center justify-center text-blue-700 text-3xl font-bold">
+                <img v-if="picturePreview || profile?.profile_picture" :src="picturePreview || profile.profile_picture" :alt="fullName" class="w-full h-full object-cover" />
+                <span v-else>{{ fullName.charAt(0) }}</span>
               </div>
-              <h2 class="text-xl font-semibold text-gray-900">{{ profile.name }}</h2>
-              <p class="text-gray-500">{{ profile.title }}</p>
+              <h2 class="text-xl font-semibold text-gray-900 mt-3">{{ fullName }}</h2>
+              <p class="text-gray-500">{{ profile?.title || user?.role || '' }}</p>
             </div>
 
-            <div class="space-y-4">
-              <div class="flex items-center gap-3 text-sm">
-                <svg class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                <span class="text-gray-600">{{ profile.email }}</span>
+            <div class="space-y-3 text-sm">
+              <div>📧 {{ email }}</div>
+              <div v-if="!isEditing">
+                <div v-if="profile?.phone">📞 {{ profile.phone }}</div>
+                <div v-if="profile?.location">📍 {{ profile.location }}</div>
+                <div v-if="profile?.linkedin_profile">
+                  <a :href="profile.linkedin_profile" target="_blank" class="text-blue-600 hover:underline">LinkedIn</a>
+                </div>
+                <div v-if="profile?.github_profile">
+                  <a :href="profile.github_profile" target="_blank" class="text-blue-600 hover:underline">GitHub</a>
+                </div>
+                <div v-if="profile?.website">
+                  <a :href="profile.website" target="_blank" class="text-blue-600 hover:underline">Website</a>
+                </div>
               </div>
-              <div class="flex items-center gap-3 text-sm">
-                <svg class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                </svg>
-                <span class="text-gray-600">{{ profile.phone }}</span>
-              </div>
-              <div class="flex items-center gap-3 text-sm">
-                <svg class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <span class="text-gray-600">{{ profile.location }}</span>
-              </div>
-              <div v-if="profile.linkedin_profile" class="flex items-center gap-3 text-sm">
-                <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
-                </svg>
-                <a :href="profile.linkedin_profile" target="_blank" class="text-blue-600 hover:underline">LinkedIn Profile</a>
-              </div>
+              <template v-else>
+                <input v-model="editForm.title" placeholder="Job title (e.g. Senior Developer)" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+                <input v-model="editForm.phone" placeholder="Phone" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+                <input v-model="editForm.location" placeholder="Location" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+                <input v-model="editForm.linkedin_profile" placeholder="LinkedIn URL" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+                <input v-model="editForm.github_profile" placeholder="GitHub URL" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+                <input v-model="editForm.website" placeholder="Website" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+              </template>
             </div>
 
             <div class="mt-6 pt-6 border-t border-gray-200">
               <h3 class="font-semibold text-gray-900 mb-3">Resume</h3>
-              <div class="flex items-center gap-2 text-sm text-gray-600">
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <span>{{ profile.resume }}</span>
+              <div v-if="!isEditing">
+                <span v-if="profile?.resume" class="text-sm text-gray-600">{{ profile.resume }}</span>
+                <span v-else class="text-sm text-gray-400">No resume uploaded</span>
               </div>
-              <button v-if="isOwner" class="mt-3 w-full px-4 py-2 border border-blue-100 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 font-bold transition-all text-sm flex items-center justify-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                Upload New Resume
-              </button>
-              <button v-else @click="downloadResume" class="mt-3 w-full px-4 py-2 border border-indigo-100 bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 font-bold transition-all text-sm flex items-center justify-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                Download Resume
-              </button>
+              <div v-else class="space-y-2">
+                <label class="text-sm text-gray-600 block">Upload resume (PDF/DOC, max 10 MB)</label>
+                <input type="file" accept=".pdf,.doc,.docx" @change="onResumeChange" class="text-sm" />
+                <label class="text-sm text-gray-600 block mt-3">Profile picture (JPG, PNG, GIF, max 2 MB)</label>
+                <input type="file" accept="image/jpeg,image/png,image/gif" @change="onPictureChange" class="text-sm" />
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Right Column - Details -->
+        <!-- Main column -->
         <div class="lg:col-span-2 space-y-6">
-          <!-- Bio -->
           <div class="bg-white rounded-xl border border-gray-200 p-6">
             <h3 class="font-semibold text-gray-900 mb-3">Bio</h3>
-            <p v-if="!isEditing" class="text-gray-600">{{ profile.bio }}</p>
-            <textarea v-else v-model="editData.bio" rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+            <p v-if="!isEditing" class="text-gray-600 whitespace-pre-line">{{ profile?.bio || 'No bio yet.' }}</p>
+            <textarea v-else v-model="editForm.bio" rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
           </div>
 
-          <!-- Skills -->
           <div class="bg-white rounded-xl border border-gray-200 p-6">
             <h3 class="font-semibold text-gray-900 mb-3">Skills</h3>
             <div v-if="!isEditing" class="flex flex-wrap gap-2">
-              <span v-for="skill in profile.skills" :key="skill" class="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium">
-                {{ skill }}
-              </span>
+              <span v-for="skill in profile?.skills || []" :key="skill" class="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium">{{ skill }}</span>
+              <span v-if="!profile?.skills?.length" class="text-gray-400 text-sm">No skills added.</span>
             </div>
             <div v-else>
               <div class="flex flex-wrap gap-2 mb-3">
-                <span v-for="skill in editData.skills" :key="skill" class="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium flex items-center gap-1">
+                <span v-for="skill in editForm.skills" :key="skill" class="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium flex items-center gap-1">
                   {{ skill }}
-                  <button @click="removeSkill(skill)" class="text-blue-400 hover:text-blue-600">&times;</button>
+                  <button type="button" @click="removeSkill(skill)" class="text-blue-400 hover:text-blue-600">×</button>
                 </span>
               </div>
               <div class="flex gap-2">
-                <input v-model="newSkill" type="text" placeholder="Add skill" aria-label="Add new skill" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg" @keyup.enter="addSkill">
-                <button @click="addSkill" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Add</button>
+                <input v-model="newSkill" type="text" placeholder="Add skill, or paste comma-separated skills" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg" @keyup.enter.prevent="addSkill">
+                <button type="button" @click="addSkill" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Add</button>
               </div>
             </div>
           </div>
 
-          <!-- Experience -->
           <div class="bg-white rounded-xl border border-gray-200 p-6">
-            <h3 class="font-semibold text-gray-900 mb-4">Experience</h3>
-            <div class="space-y-4">
-              <div v-for="exp in profile.experience" :key="exp.id" class="border-l-2 border-blue-500 pl-4">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-semibold text-gray-900">Experience</h3>
+              <button v-if="isEditing" @click="addExperience" class="text-sm text-blue-600 hover:text-blue-700">+ Add</button>
+            </div>
+            <div v-if="!isEditing" class="space-y-4">
+              <div v-for="(exp, idx) in profile?.experience || []" :key="idx" class="border-l-2 border-blue-500 pl-4">
                 <h4 class="font-medium text-gray-900">{{ exp.title }}</h4>
-                <p class="text-sm text-gray-500">{{ exp.company }} - {{ exp.period }}</p>
-                <p class="text-sm text-gray-600 mt-1">{{ exp.description }}</p>
+                <p class="text-sm text-gray-500">{{ exp.company }}<span v-if="exp.period"> · {{ exp.period }}</span></p>
+                <p v-if="exp.description" class="text-sm text-gray-600 mt-1">{{ exp.description }}</p>
+              </div>
+              <p v-if="!profile?.experience?.length" class="text-gray-400 text-sm">No experience added.</p>
+            </div>
+            <div v-else class="space-y-4">
+              <div v-for="(exp, idx) in editForm.experience" :key="idx" class="border border-gray-200 rounded-lg p-3 space-y-2">
+                <input v-model="exp.title" placeholder="Title" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+                <input v-model="exp.company" placeholder="Company" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+                <input v-model="exp.period" placeholder="Period (e.g. 2021 - Present)" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+                <textarea v-model="exp.description" placeholder="Description" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg"></textarea>
+                <button @click="removeExperience(idx)" class="text-sm text-red-600 hover:text-red-700">Remove</button>
               </div>
             </div>
           </div>
 
-          <!-- Education -->
           <div class="bg-white rounded-xl border border-gray-200 p-6">
-            <h3 class="font-semibold text-gray-900 mb-4">Education</h3>
-            <div class="space-y-3">
-              <div v-for="edu in profile.education" :key="edu.id" class="border-l-2 border-purple-500 pl-4">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-semibold text-gray-900">Education</h3>
+              <button v-if="isEditing" @click="addEducation" class="text-sm text-blue-600 hover:text-blue-700">+ Add</button>
+            </div>
+            <div v-if="!isEditing" class="space-y-3">
+              <div v-for="(edu, idx) in profile?.education || []" :key="idx" class="border-l-2 border-purple-500 pl-4">
                 <h4 class="font-medium text-gray-900">{{ edu.degree }}</h4>
-                <p class="text-sm text-gray-500">{{ edu.school }} - {{ edu.year }}</p>
+                <p class="text-sm text-gray-500">{{ edu.school }}<span v-if="edu.year"> · {{ edu.year }}</span></p>
+              </div>
+              <p v-if="!profile?.education?.length" class="text-gray-400 text-sm">No education added.</p>
+            </div>
+            <div v-else class="space-y-4">
+              <div v-for="(edu, idx) in editForm.education" :key="idx" class="border border-gray-200 rounded-lg p-3 space-y-2">
+                <input v-model="edu.degree" placeholder="Degree" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+                <input v-model="edu.school" placeholder="School" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+                <input v-model="edu.year" placeholder="Year" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+                <button @click="removeEducation(idx)" class="text-sm text-red-600 hover:text-red-700">Remove</button>
               </div>
             </div>
           </div>
@@ -205,10 +321,7 @@ const downloadResume = () => {
       </div>
     </div>
   </div>
-  </div>
-  </div>
   <Footer />
-
 </template>
 
 <style scoped>

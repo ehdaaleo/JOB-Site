@@ -25,7 +25,6 @@
     <div>
       <div class="flex items-center justify-between">
         <label for="password" class="block text-sm font-medium text-gray-900">Password</label>
-        <RouterLink to="/auth/forgot-password" class="text-sm font-semibold text-blue-600 hover:text-blue-500">Forgot password?</RouterLink>
       </div>
       <div class="relative">
         <input

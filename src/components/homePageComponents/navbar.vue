@@ -1,18 +1,14 @@
 <script setup>
-import { ref } from 'vue'
-import { RouterLink, useRouter } from 'vue-router'
+import { computed, ref } from 'vue'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { useAuth0 } from '@auth0/auth0-vue'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
-const { logout, isAuthenticated: isAuth0Authenticated } = useAuth0()
 
 const handleLogout = () => {
-  if (isAuth0Authenticated.value) {
-    logout({ logoutParams: { returnTo: window.location.origin } })
-  }
   authStore.logout()
 }
 const isMenuOpen = ref(false)
@@ -29,8 +25,20 @@ const navLinks = [
   { name: 'Find Jobs', path: '/jobs' },
   { name: 'Companies', path: '/companies' },
   { name: 'Pricing', path: '/pricing' },
+  { name: 'About Us', path: '/about' },
   { name: 'Profile', path: '/profile' }
 ]
+
+const visibleNavLinks = computed(() => {
+  if (route.path.startsWith('/auth') || !authStore.isAuthenticated) {
+    return navLinks.filter((link) => link.name !== 'Profile')
+  }
+  const links = [...navLinks]
+  if (authStore.isCandidate) {
+    links.splice(3, 0, { name: 'Saved Jobs', path: '/candidate/saved-jobs' })
+  }
+  return links
+})
 </script>
 
 <template>
@@ -50,7 +58,7 @@ const navLinks = [
         <!-- Desktop Menu -->
         <div class="hidden md:flex items-center gap-6">
           <RouterLink 
-            v-for="link in navLinks" 
+            v-for="link in visibleNavLinks" 
             :key="link.path" 
             :to="link.path"
             class="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
@@ -72,7 +80,7 @@ const navLinks = [
             <!-- Post Job Button for Employers -->
             <RouterLink 
               v-if="authStore.user?.role === 'employer'"
-              to="/employer/job-post"
+              to="/employer/post-job"
               class="text-sm font-medium px-4 py-2 bg-linear-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:opacity-90 transition-opacity mr-2"
             >
               Post Job
@@ -105,7 +113,7 @@ const navLinks = [
       <!-- Mobile Menu -->
       <div v-if="isMenuOpen" class="md:hidden py-3 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900">
         <div class="flex flex-col gap-2">
-          <RouterLink v-for="link in navLinks" :key="link.path" :to="link.path" class="px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors" @click="isMenuOpen = false">
+          <RouterLink v-for="link in visibleNavLinks" :key="link.path" :to="link.path" class="px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors" @click="isMenuOpen = false">
             {{ link.name }}
           </RouterLink>
           <div class="h-px bg-gray-200 dark:bg-gray-800 my-1"></div>
@@ -114,7 +122,7 @@ const navLinks = [
             <!-- Post Job for Mobile Employers -->
             <RouterLink 
               v-if="authStore.user?.role === 'employer'"
-              to="/employer/job-post" 
+              to="/employer/post-job" 
               class="px-3 py-2 text-sm font-medium text-blue-600 rounded-lg hover:bg-blue-50 text-left" 
               @click="isMenuOpen = false"
             >

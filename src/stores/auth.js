@@ -1,426 +1,216 @@
 import { defineStore } from 'pinia'
-import { ref, computed, watch } from 'vue'
-import { authApi as laravelAuthApi } from '@/services/laravelApi'
-import { authApi as legacyAuthApi } from '@/services/auth'
+import { ref, computed } from 'vue'
+import { authApi, apiErrorMessage } from '@/services/api'
 import router from '@/router'
 
-// Configuration: Set to true to use Laravel API, false to use legacy JSON Server
-const USE_LARAVEL_API = !!import.meta.env.VITE_LARAVEL_API_URL
+const TOKEN_KEY = 'token'
+const USER_KEY = 'user'
+
+function readPersistedToken() {
+  return (
+    localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY) || null
+  )
+}
+
+function readPersistedUser() {
+  const raw =
+    localStorage.getItem(USER_KEY) || sessionStorage.getItem(USER_KEY)
+  if (!raw) return null
+  try {
+    return JSON.parse(raw)
+  } catch {
+    return null
+  }
+}
+
+function clearPersisted() {
+  localStorage.removeItem(TOKEN_KEY)
+  sessionStorage.removeItem(TOKEN_KEY)
+  localStorage.removeItem(USER_KEY)
+  sessionStorage.removeItem(USER_KEY)
+}
+
+function persist(token, user, remember) {
+  const store = remember ? localStorage : sessionStorage
+  // Clear the other store so we never end up with two copies.
+  const other = remember ? sessionStorage : localStorage
+  other.removeItem(TOKEN_KEY)
+  other.removeItem(USER_KEY)
+  store.setItem(TOKEN_KEY, token)
+  store.setItem(USER_KEY, JSON.stringify(user))
+}
 
 export const useAuthStore = defineStore('auth', () => {
-  // State
-  const user = ref(null)
-  const token = ref(null)
+  const user = ref(readPersistedUser())
+  const token = ref(readPersistedToken())
   const isLoading = ref(false)
   const error = ref(null)
-  const rememberMe = ref(false)
-  const useLaravelBackend = ref(USE_LARAVEL_API)
+  const rememberMe = ref(!!localStorage.getItem(TOKEN_KEY))
+  let listenersAttached = false
 
-  // Getters
   const isAuthenticated = computed(() => !!token.value)
-  const isLoggedIn = computed(() => !!user.value && !!token.value)
   const userRole = computed(() => user.value?.role || null)
-  const isCandidate = computed(() => user.value?.role === 'candidate')
-  const isEmployer = computed(() => user.value?.role === 'employer')
-  const isAdmin = computed(() => user.value?.role === 'admin')
+  const isCandidate = computed(() => userRole.value === 'candidate')
+  const isEmployer = computed(() => userRole.value === 'employer')
+  const isAdmin = computed(() => userRole.value === 'admin')
 
-  // Initialize token from storage on store creation
-  function initFromStorage() {
-    // Try Laravel token first, then fallback to legacy
-    const storedToken = localStorage.getItem('token') || 
-                        sessionStorage.getItem('token') ||
-                        localStorage.getItem('auth_token') || 
-                        sessionStorage.getItem('auth_token')
-    const storedUser = localStorage.getItem('user') || sessionStorage.getItem('user')
+  /** Where this user belongs after login. */
+  const dashboardRoute = computed(() => {
+    switch (userRole.value) {
+      case 'employer':
+        return { name: 'employer-dashboard' }
+      case 'admin':
+        return { name: 'admin-dashboard' }
+      case 'candidate':
+        return { name: 'candidate-dashboard' }
+      default:
+        return { name: 'home' }
+    }
+  })
 
-    if (storedToken && storedUser) {
-      token.value = storedToken
-      const basicUser = JSON.parse(storedUser)
-      user.value = basicUser
-      rememberMe.value = !!localStorage.getItem('token') || !!localStorage.getItem('auth_token')
+  function attachAuthListeners() {
+    if (listenersAttached || typeof window === 'undefined') return
+    listenersAttached = true
 
-      // Fetch full user data from Laravel API
-      if (basicUser.id && useLaravelBackend.value) {
-        laravelAuthApi
-          .getCurrentUser()
-          .then((response) => {
-            user.value = response.user || response
-          })
-          .catch((err) => {
-            console.error('Failed to fetch full user profile from Laravel API', err)
-            // Fallback to legacy auth API
-            if (legacyAuthApi) {
-              legacyAuthApi.getUserById(basicUser.id).then((fullUser) => {
-                user.value = fullUser
-              }).catch(() => {
-                console.error('Failed to fetch user from legacy API')
-              })
-            }
-          })
-      } else if (basicUser.id && !useLaravelBackend.value && legacyAuthApi) {
-        // Use legacy auth API
-        legacyAuthApi
-          .getUserById(basicUser.id)
-          .then((fullUser) => {
-            user.value = fullUser
-          })
-          .catch((err) => {
-            console.error('Failed to fetch full user profile', err)
-          })
+    // Server told us the token is no longer valid.
+    window.addEventListener('auth:unauthorized', () => {
+      handleLocalLogout()
+      if (router.currentRoute.value.name !== 'login') {
+        router.push({
+          name: 'login',
+          query: { redirect: router.currentRoute.value.fullPath },
+        })
       }
+    })
+
+    // Another tab cleared the token — sync this tab.
+    window.addEventListener('storage', (event) => {
+      if ((event.key === TOKEN_KEY || event.key === USER_KEY) && !event.newValue) {
+        handleLocalLogout()
+      }
+    })
+  }
+
+  /** Called once from App.vue#onMounted. */
+  async function bootstrap() {
+    attachAuthListeners()
+    if (!token.value) return
+    // Refresh from /me so role/profile are up to date even if the
+    // persisted snapshot is stale.
+    try {
+      const res = await authApi.me()
+      user.value = res.user || res
+      persist(token.value, user.value, rememberMe.value)
+    } catch {
+      // Interceptor already cleared storage on 401.
     }
   }
 
-  // Call init on store creation
-  initFromStorage()
-
-  // Watch for token changes and persist accordingly
-  watch(token, (newToken) => {
-    if (!newToken) return
-
-    if (rememberMe.value) {
-      localStorage.setItem('token', newToken)
-    } else {
-      sessionStorage.setItem('token', newToken)
-    }
-  })
-
-  // Helper to persist only stripped user data
-  function saveUserToStorage(userData, remember) {
-    if (!userData) return
-    const safeUserData = {
-      id: userData.id,
-      name: userData.name,
-      role: userData.role,
-      employerType: userData.employerType,
-    }
-    const dataStr = JSON.stringify(safeUserData)
-    if (remember) {
-      localStorage.setItem('user', dataStr)
-    } else {
-      sessionStorage.setItem('user', dataStr)
-    }
-  }
-
-  // Watch for user changes and persist
-  watch(user, (newUser) => {
-    saveUserToStorage(newUser, rememberMe.value)
-  })
-
-  // Actions
   async function login(credentials) {
     isLoading.value = true
     error.value = null
-    rememberMe.value = credentials.rememberMe || false
-
+    rememberMe.value = !!credentials.rememberMe
     try {
-      let response
-      if (useLaravelBackend.value) {
-        // Use Laravel API
-        response = await laravelAuthApi.login(credentials)
-      } else if (legacyAuthApi) {
-        // Fallback to legacy API
-        response = await legacyAuthApi.login(credentials)
-      } else {
-        throw new Error('No authentication API available')
+      const res = await authApi.login({
+        email: credentials.email,
+        password: credentials.password,
+        remember_me: rememberMe.value,
+      })
+      const authToken = res.token
+      const userData = res.user
+      if (!authToken || !userData) {
+        throw new Error('Malformed login response.')
       }
-
-      const { user: userData, token: authToken } = response
-
-      user.value = userData
       token.value = authToken
-
-      // Persist based on rememberMe choice
-      if (rememberMe.value) {
-        localStorage.setItem('token', authToken)
-      } else {
-        sessionStorage.setItem('token', authToken)
-      }
-      saveUserToStorage(userData, rememberMe.value)
-
+      user.value = userData
+      persist(authToken, userData, rememberMe.value)
       return { success: true, user: userData }
     } catch (err) {
-      error.value = err.response?.data?.message || err.message || 'Login failed'
+      error.value = apiErrorMessage(err, 'Login failed.')
       return { success: false, error: error.value }
     } finally {
       isLoading.value = false
     }
   }
 
-  async function loginWithOAuth({ provider, code, redirectUri }) {
+  async function register(payload) {
     isLoading.value = true
     error.value = null
-
     try {
-      console.log(`Exchanging ${provider} code for token...`, { code, redirectUri })
-
-      throw new Error(
-        'Social login backend not implemented yet. Token exchange must happen server-side.',
-      )
+      const { confirmPassword, rememberMe: _rm, ...rest } = payload
+      // Laravel expects password_confirmation; accept either shape.
+      const body = {
+        ...rest,
+        password_confirmation:
+          rest.password_confirmation || confirmPassword || rest.password,
+      }
+      const res = await authApi.register(body)
+      return { success: true, user: res.user || res }
     } catch (err) {
-      error.value = err.message || 'Social login failed'
+      error.value = apiErrorMessage(err, 'Registration failed.')
       return { success: false, error: error.value }
     } finally {
       isLoading.value = false
     }
   }
 
-  async function register(userData) {
-    isLoading.value = true
-    error.value = null
-
-    try {
-      // Remove confirmPassword if it exists (it's only for UI validation)
-      const { confirmPassword, ...dataWithoutConfirm } = userData
-      
-      let response
-      if (useLaravelBackend.value) {
-        // Use Laravel API - includes role-specific fields
-        response = await laravelAuthApi.register(dataWithoutConfirm)
-      } else if (legacyAuthApi) {
-        // Fallback to legacy API
-        response = await legacyAuthApi.register(dataWithoutConfirm)
-      } else {
-        throw new Error('No registration API available')
-      }
-
-      return { success: true, user: response }
-    } catch (err) {
-      error.value = err.response?.data?.message || err.message || 'Registration failed'
-      // Handle specific Laravel validation errors
-      if (err.response?.status === 422 && err.response?.data?.errors) {
-        const errors = err.response.data.errors
-        const firstError = Object.values(errors)[0]
-        if (Array.isArray(firstError)) {
-          error.value = firstError[0]
-        }
-      }
-      return { success: false, error: error.value }
-    } finally {
-      isLoading.value = false
-    }
-  }
-
-  async function forgotPassword(email) {
-    isLoading.value = true
-    error.value = null
-
-    try {
-      // Laravel API doesn't have this endpoint in the reference, use legacy
-      if (legacyAuthApi) {
-        const result = await legacyAuthApi.forgotPassword(email)
-        return { success: true, message: result.message }
-      } else {
-        throw new Error('Password reset not available')
-      }
-    } catch (err) {
-      error.value = err.message || 'Failed to send reset email'
-      return { success: false, error: error.value }
-    } finally {
-      isLoading.value = false
-    }
-  }
-
-  async function resetPassword(tokenValue, newPassword) {
-    isLoading.value = true
-    error.value = null
-
-    try {
-      // Laravel API doesn't have this endpoint in the reference, use legacy
-      if (legacyAuthApi) {
-        const result = await legacyAuthApi.resetPassword(tokenValue, newPassword)
-        return { success: true, message: result.message }
-      } else {
-        throw new Error('Password reset not available')
-      }
-    } catch (err) {
-      error.value = err.message || 'Failed to reset password'
-      return { success: false, error: error.value }
-    } finally {
-      isLoading.value = false
-    }
+  function handleLocalLogout() {
+    user.value = null
+    token.value = null
+    rememberMe.value = false
+    clearPersisted()
   }
 
   async function logout() {
     isLoading.value = true
     try {
-      if (useLaravelBackend.value) {
-        await laravelAuthApi.logout()
-      }
-    } catch (err) {
-      console.error('Logout error:', err)
+      if (token.value) await authApi.logout()
+    } catch {
+      // Even if the server call fails, drop local credentials.
     } finally {
-      user.value = null
-      token.value = null
-      rememberMe.value = false
+      handleLocalLogout()
       isLoading.value = false
-
-      // Clear storage
-      localStorage.removeItem('token')
-      sessionStorage.removeItem('token')
-      localStorage.removeItem('user')
-      sessionStorage.removeItem('user')
-
-      // Redirect to login
-      router.push('/auth/login')
+      router.push({ name: 'login' })
     }
   }
 
-  // Setup auth state listener for token expiration
-  function setupAuthListener() {
-    window.addEventListener('auth:unauthorized', () => {
-      user.value = null
-      token.value = null
-      rememberMe.value = false
-      // Clear all storage on unauthorized
-      localStorage.clear()
-      sessionStorage.clear()
-      router.push('/auth/login')
-    })
-
-    // Listen for storage changes (logout in another tab)
-    window.addEventListener('storage', (event) => {
-      if ((event.key === 'token' || event.key === 'user') && !event.newValue) {
-        user.value = null
-        token.value = null
-        rememberMe.value = false
-        // Clear remaining storage
-        localStorage.clear()
-        sessionStorage.clear()
-        if (router.currentRoute.value.path !== '/auth/login') {
-          router.push('/auth/login')
-        }
-      }
-    })
-  }
-
-  // Check if email exists (uses legacy API since Laravel doesn't have this endpoint)
-  async function checkEmailExists(email) {
-    try {
-      if (legacyAuthApi) {
-        return await legacyAuthApi.checkEmailExists(email)
-      }
-      return false
-    } catch (err) {
-      return false
-    }
-  }
-
-  // Update user profile
-  async function updateProfile(userData) {
-    if (!user.value) return { success: false, error: 'Not authenticated' }
-
-    isLoading.value = true
-    error.value = null
-
-    try {
-      let updatedUser
-      if (useLaravelBackend.value) {
-        // Use Laravel profile API
-        const response = await laravelAuthApi.updateProfile(userData)
-        updatedUser = response
-      } else if (legacyAuthApi) {
-        // Use legacy API
-        updatedUser = await legacyAuthApi.updateUser(user.value.id, userData)
-      } else {
-        throw new Error('No profile API available')
-      }
-      
-      user.value = updatedUser
-
-      // Persist updated user
-      saveUserToStorage(updatedUser, rememberMe.value)
-
-      return { success: true, user: updatedUser }
-    } catch (err) {
-      error.value = err.response?.data?.message || err.message || 'Failed to update profile'
-      return { success: false, error: error.value }
-    } finally {
-      isLoading.value = false
-    }
-  }
-
-  // Verify email
-  async function verifyEmail(tokenValue) {
-    isLoading.value = true
-    error.value = null
-
-    try {
-      // Laravel API doesn't have this endpoint in the reference, use legacy if available
-      if (legacyAuthApi) {
-        const result = await legacyAuthApi.verifyEmail(tokenValue)
-        return { success: true, message: result.message }
-      } else {
-        console.log('Email verification not implemented')
-        return { success: true, message: 'Email verification not implemented' }
-      }
-    } catch (err) {
-      error.value = err.message || 'Failed to verify email'
-      return { success: false, error: error.value }
-    } finally {
-      isLoading.value = false
-    }
-  }
-
-  // Refresh current user data from API
-  async function refreshUser() {
+  /** Re-fetch the current user, e.g. after a profile update. */
+  async function refresh() {
     if (!token.value) return null
-    
     try {
-      if (useLaravelBackend.value) {
-        const response = await laravelAuthApi.getCurrentUser()
-        user.value = response.user || response
-        return user.value
-      } else if (legacyAuthApi && user.value?.id) {
-        const fullUser = await legacyAuthApi.getUserById(user.value.id)
-        user.value = fullUser
-        return user.value
-      }
-    } catch (err) {
-      console.error('Failed to refresh user:', err)
+      const res = await authApi.me()
+      user.value = res.user || res
+      persist(token.value, user.value, rememberMe.value)
+      return user.value
+    } catch {
       return null
     }
   }
 
-  // Clear error state
   function clearError() {
     error.value = null
   }
 
-  // Switch backend (for development/testing)
-  function switchBackend(useLaravel) {
-    useLaravelBackend.value = useLaravel
-  }
-
   return {
-    // State
+    // state
     user,
     token,
     isLoading,
     error,
     rememberMe,
-    useLaravelBackend,
-    // Getters
+    // getters
     isAuthenticated,
-    isLoggedIn,
     userRole,
     isCandidate,
     isEmployer,
     isAdmin,
-    // Actions
+    dashboardRoute,
+    // actions
+    bootstrap,
     login,
     register,
     logout,
-    forgotPassword,
-    resetPassword,
-    initFromStorage,
-    setupAuthListener,
-    checkEmailExists,
-    updateProfile,
-    verifyEmail,
-    loginWithOAuth,
+    refresh,
     clearError,
-    refreshUser,
-    switchBackend,
   }
 })

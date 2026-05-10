@@ -1,6 +1,8 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-import axios from 'axios'
+import { ref, computed, onMounted } from 'vue'
+import { useJobStore } from '@/stores/jobStore'
+import { useApplicationStore } from '@/stores/applicationStore'
+import { apiErrorMessage } from '@/services/api'
 
 import ApplyJobSummary from '../components/applyJobComponents/ApplyJobSummary.vue'
 import ApplyJobForm from '../components/applyJobComponents/ApplyJobForm.vue'
@@ -10,59 +12,59 @@ import ApplyJobError from '../components/applyJobComponents/ApplyJobError.vue'
 const props = defineProps({
   id: {
     type: String,
-    required: true
-  }
+    required: true,
+  },
 })
 
-// State: idle | loading | success | error
+const jobStore = useJobStore()
+const applicationStore = useApplicationStore()
+
+// State: idle | success | error
 const status = ref('idle')
 const loading = ref(false)
 const errorMessage = ref('')
 
-// Job details for AI cover letter generation
-const jobDetails = ref({
-  title: '',
-  company: ''
-})
-
-const API_URL = 'https://retoolapi.dev/PAj1AO/AppPost'
-const JOBS_API_URL = 'https://retoolapi.dev/PAj1AO/jobs'
-
-// Fetch job details on mount
-onMounted(async () => {
-  try {
-    const response = await axios.get(`${JOBS_API_URL}/${props.id}`)
-    if (response.data) {
-      jobDetails.value = {
-        title: response.data.job_title || response.data.title || '',
-        company: response.data.company || response.data.company_name || ''
-      }
-    }
-  } catch (error) {
-    console.error('Failed to fetch job details:', error)
-    // Use defaults - AI generation will still work with manual input
+const jobDetails = computed(() => {
+  const j = jobStore.currentJob
+  if (!j) return { title: '', company: '' }
+  return {
+    title: j.title,
+    company:
+      j.employer?.company_name || j.employer?.organization || j.employer?.name || 'Company',
   }
 })
 
+onMounted(() => jobStore.fetchJobById(props.id))
+
 const handleSubmit = async (formData) => {
   loading.value = true
-  status.value = 'idle'
   errorMessage.value = ''
-
   try {
-    const response = await axios.post(API_URL, formData)
-
-    if (response.status === 201 || response.status === 200) {
-      status.value = 'success'
-    } else {
-      throw new Error('Unexpected response status')
+    // Normalise the form payload onto the Laravel ApplicationRequest schema.
+    const payload = {
+      cover_letter: formData.cover_letter || '',
+      phone: formData.phone || '',
+      email: formData.email || '',
+      message: [
+        formData.candidate_name && `Candidate: ${formData.candidate_name}`,
+        formData.current_role && `Current role: ${formData.current_role}`,
+        formData.industry && `Industry: ${formData.industry}`,
+        formData.resume_content && `\n${formData.resume_content}`,
+      ]
+        .filter(Boolean)
+        .join('\n')
+        .slice(0, 2000),
+      resume: (formData.resume || '').slice(0, 1000),
     }
+    await applicationStore.applyForJob(props.id, payload)
+    status.value = 'success'
   } catch (err) {
     status.value = 'error'
-    errorMessage.value =
-      err.response?.data?.message ||
-      err.message ||
-      'Failed to submit your application. Please check your connection and try again.'
+    if (err?.response?.status === 409) {
+      errorMessage.value = 'You have already applied for this job.'
+    } else {
+      errorMessage.value = apiErrorMessage(err, 'Failed to submit your application.')
+    }
   } finally {
     loading.value = false
   }

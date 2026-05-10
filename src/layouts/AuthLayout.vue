@@ -1,9 +1,11 @@
 <script setup>
 import { RouterView } from 'vue-router'
+import Navbar from '@/components/homePageComponents/navbar.vue'
 </script>
 
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+  <Navbar />
+  <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex flex-col justify-center pt-28 pb-12 sm:px-6 lg:px-8">
     <!-- Logo Header -->
     <div class="sm:mx-auto sm:w-full sm:max-w-md mb-8">
       <router-link to="/" class="flex items-center justify-center gap-2">

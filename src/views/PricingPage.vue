@@ -9,17 +9,10 @@ import { pricingPlans as plans } from '@/stores/pricingPlans'
 const router = useRouter()
 const isYearly = ref(false)
 
-const handleSelect = (plan) => {
-  if (plan.monthlyPrice === 0) {
-    // Free plan, skip payment
-    router.push('/employer/post-job')
-    return
-  }
-  router.push({
-    name: 'checkout',
-    params: { planId: plan.id },
-    query: { billing: isYearly.value ? 'yearly' : 'monthly' }
-  })
+// Pricing plans are presentational only — billing for plans is not yet
+// wired to a backend. The CTA points employers at the post-job flow.
+const handleSelect = () => {
+  router.push('/employer/post-job')
 }
 </script>
 

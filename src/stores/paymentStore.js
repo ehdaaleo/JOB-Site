@@ -1,87 +1,80 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
+import { paymentApi, apiErrorMessage } from '@/services/api'
 
+/**
+ * Thin wrapper around the PayPal create/capture endpoints.
+ * The Laravel controller flow is:
+ *   1. employer POSTs /applications/{id}/payment/paypal/create with {amount,currency}
+ *      → response: { data: { payment_id, paypal_order_id, approval_url, status } }
+ *   2. employer is redirected to approval_url (PayPal hosted page)
+ *   3. on return, employer POSTs /applications/{id}/payment/paypal/capture with {paypal_order_id}
+ *      → response: { data: Payment }
+ *
+ * No state is persisted in localStorage — the backend is the source of truth.
+ */
 export const usePaymentStore = defineStore('payments', () => {
-  const stored = JSON.parse(localStorage.getItem('vuelance_payments') || '[]')
-  const payments = ref(stored)
+  const isLoading = ref(false)
+  const error = ref(null)
+  const lastOrder = ref(null) // { payment_id, paypal_order_id, approval_url }
+  const lastPayment = ref(null)
 
-  const persist = () => {
-    localStorage.setItem('vuelance_payments', JSON.stringify(payments.value))
-  }
-
-  // Getters
-  const allPayments = computed(() => payments.value)
-
-  const completedPayments = computed(() =>
-    payments.value.filter(p => p.status === 'completed')
-  )
-
-  const pendingPayments = computed(() =>
-    payments.value.filter(p => p.status === 'pending')
-  )
-
-  const getPaymentById = (id) => {
-    return payments.value.find(p => p.id === id)
-  }
-
-  // Actions
-  const createPayment = (jobTitle, companyName, amount = 9.99) => {
-    const payment = {
-      id: 'PAY-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
-      jobTitle,
-      companyName,
-      amount,
-      currency: 'USD',
-      method: 'paypal',
-      status: 'pending',
-      createdAt: new Date().toISOString(),
-      completedAt: null,
-      paypalOrderId: null,
-      receipt: null,
+  async function createOrder(applicationId, amount, currency = 'USD') {
+    isLoading.value = true
+    error.value = null
+    try {
+      const res = await paymentApi.createOrder(applicationId, amount, currency)
+      lastOrder.value = res.data ?? res
+      return lastOrder.value
+    } catch (err) {
+      error.value = apiErrorMessage(err, 'Could not start PayPal payment.')
+      throw err
+    } finally {
+      isLoading.value = false
     }
-    payments.value.push(payment)
-    persist()
-    return payment
   }
 
-  const completePayment = (paymentId, paypalOrderId) => {
-    const payment = payments.value.find(p => p.id === paymentId)
-    if (!payment) return null
-
-    payment.status = 'completed'
-    payment.completedAt = new Date().toISOString()
-    payment.paypalOrderId = paypalOrderId || 'PAYPAL-' + Date.now()
-    payment.receipt = {
-      receiptNumber: 'REC-' + Date.now().toString(36).toUpperCase(),
-      transactionId: payment.paypalOrderId,
-      date: payment.completedAt,
-      description: `Job posting fee: ${payment.jobTitle} - ${payment.companyName}`,
-      amount: payment.amount,
-      currency: payment.currency,
-      method: 'PayPal',
+  async function captureOrder(applicationId, paypalOrderId) {
+    isLoading.value = true
+    error.value = null
+    try {
+      const res = await paymentApi.captureOrder(applicationId, paypalOrderId)
+      lastPayment.value = res.data ?? res
+      return lastPayment.value
+    } catch (err) {
+      error.value = apiErrorMessage(err, 'PayPal capture failed.')
+      throw err
+    } finally {
+      isLoading.value = false
     }
-    persist()
-    return payment
   }
 
-  const failPayment = (paymentId, reason) => {
-    const payment = payments.value.find(p => p.id === paymentId)
-    if (!payment) return null
+  async function fetchPayment(paymentId) {
+    isLoading.value = true
+    error.value = null
+    try {
+      const res = await paymentApi.show(paymentId)
+      return res.data ?? res
+    } catch (err) {
+      error.value = apiErrorMessage(err, 'Failed to load payment.')
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
 
-    payment.status = 'failed'
-    payment.failReason = reason || 'Payment was declined or cancelled.'
-    persist()
-    return payment
+  function clearError() {
+    error.value = null
   }
 
   return {
-    payments,
-    allPayments,
-    completedPayments,
-    pendingPayments,
-    getPaymentById,
-    createPayment,
-    completePayment,
-    failPayment,
+    isLoading,
+    error,
+    lastOrder,
+    lastPayment,
+    createOrder,
+    captureOrder,
+    fetchPayment,
+    clearError,
   }
 })

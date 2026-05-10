@@ -1,11 +1,13 @@
 
 
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useJobStore } from '../stores/jobStore';
+import { useAuthStore } from '@/stores/auth';
+import { useApplicationStore } from '@/stores/applicationStore';
+import { useToast } from 'vue-toastification';
 
-// Components
 import Navbar from '../components/homePageComponents/navbar.vue';
 import Footer from '../components/homePageComponents/footer.vue';
 import JobHero from '../components/jobPageComponents/JobHero.vue';
@@ -18,94 +20,103 @@ import ApplyCard from '../components/jobPageComponents/ApplyCard.vue';
 import JobOverview from '../components/jobPageComponents/JobOverview.vue';
 import JobComments from '../components/jobPageComponents/JobComments.vue';
 
-
 const route = useRoute();
 const router = useRouter();
 const jobStore = useJobStore();
+const authStore = useAuthStore();
+const applicationStore = useApplicationStore();
+const toast = useToast();
 
-// get job with id
-const job = ref({
-  title: '',
-  company_name: 'ITI',
-  company_logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSEgKtZiO3hayBevddOML4GOzKQYi-qX24gPg&s', 
-  company_verified: true,
-  category: '',
-  location: '',
-  work_type: '',
-  posted_at: '',
-  applications_count: 0,
-  experience_level: '',
-  salary_min: 0,
-  salary_max: 0,
-  salary_period: '',
-  application_deadline: '',
-  description: '',
-  responsibilities: [],
-  requirements: [],
-  technologies: [],
-  benefits: []
-});
+const isLoading = ref(true);
+const error = ref(null);
+const raw = ref(null);
 
-const fetchJob = (id) => {
-  if (!id) return;
-  console.log('Fetching job with ID:', id);
-  const foundJob = jobStore.getJobById(id);
-  console.log('Found job from store:', foundJob);
-  
-  if (foundJob) {
-    // Map store data to component data
-    job.value = {
-      ...foundJob,
-      company_name: foundJob.company?.name || 'ITI',
-      company_logo: foundJob.company?.logo || 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSEgKtZiO3hayBevddOML4GOzKQYi-qX24gPg&s',
-      company_verified: foundJob.company?.verified ?? true,
-      work_type: foundJob.workType || '',
-      type: foundJob.type || '',
-      posted_at: foundJob.postedAt || '',
-      applications_count: foundJob.applicationsCount || 0,
-      experience_level: foundJob.experienceLevel || '',
-      salary_min: foundJob.salaryMin || 0,
-      salary_max: foundJob.salaryMax || 0,
-      salary_period: foundJob.salaryPeriod || '',
-      application_deadline: foundJob.deadline || '',
-      // Convert strings to arrays if necessary
-      responsibilities: typeof foundJob.responsibilities === 'string' 
-        ? foundJob.responsibilities.split('\n').filter(s => s.trim()).map(s => s.replace(/^- /, '')) 
-        : (foundJob.responsibilities || []),
-      requirements: typeof foundJob.requirements === 'string' 
-        ? foundJob.requirements.split('\n').filter(s => s.trim()).map(s => s.replace(/^- /, '')) 
-        : (foundJob.requirements || []),
-      technologies: foundJob.skills || [],
-      benefits: foundJob.benefits || []
-    };
-  } else {
-    console.warn(`Job with ID ${id} not found.`);
-    // You could redirect to a 404 page here
-    router.push('/404');
+function toLines(value) {
+  if (Array.isArray(value)) return value.filter(Boolean);
+  if (typeof value === 'string') {
+    return value
+      .split('\n')
+      .map((s) => s.replace(/^[-•]\s*/, '').trim())
+      .filter(Boolean);
   }
-};
+  return [];
+}
 
-onMounted(() => {
-  fetchJob(route.params.id);
+const job = computed(() => {
+  const j = raw.value;
+  if (!j) return {};
+  const employer = j.employer || {};
+  return {
+    id: j.id,
+    title: j.title,
+    description: j.description,
+    company_name: employer.company_name || employer.organization || employer.name || 'Company',
+    company_logo: employer.company_logo || j.company_logo || null,
+    company_verified: !!employer.company_name,
+    employer_id: employer.id || j.employer_id,
+    category: j.category?.name || '',
+    location: j.location || '',
+    work_type: j.work_type || '',
+    type: j.work_type || '',
+    posted_at: j.created_at || '',
+    applications_count: j.applications_count ?? 0,
+    experience_level: j.experience_level || '',
+    salary_min: Number(j.salary_min) || 0,
+    salary_max: Number(j.salary_max) || 0,
+    salary_period: 'yearly',
+    application_deadline: j.application_deadline || '',
+    responsibilities: toLines(j.responsibilities),
+    requirements: toLines(j.requirements),
+    technologies: (j.technologies || []).map((t) => t.name || t),
+    benefits: toLines(j.benefits),
+  };
 });
 
-// Watch for route param changes 
-watch(() => route.params.id, (newId) => {
-  fetchJob(newId);
-});
-
-const isCandidate = ref(true);
-const isSaved = ref(false);
-const showModal = ref(false);
+const isCandidate = computed(() => authStore.isCandidate);
+const isSaved = computed(() => raw.value && applicationStore.isJobSaved(raw.value.id));
 const activeTab = ref(0);
 const tabs = ['Description', 'Responsibilities', 'Requirements', 'Benefits', 'Comments'];
 
+const fetchJob = async (id) => {
+  if (!id) return;
+  isLoading.value = true;
+  error.value = null;
+  try {
+    raw.value = await jobStore.fetchJobById(id);
+    if (!raw.value) {
+      router.replace({ name: 'not-found' });
+    }
+  } catch (err) {
+    error.value = err.message || 'Failed to load job';
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+onMounted(() => fetchJob(route.params.id));
+watch(() => route.params.id, (id) => fetchJob(id));
+
 const handleApply = () => {
+  if (!authStore.isAuthenticated) {
+    router.push({ name: 'login', query: { redirect: route.fullPath } });
+    return;
+  }
+  if (!authStore.isCandidate) {
+    toast.info('Only candidates can apply for jobs.');
+    return;
+  }
   router.push(`/apply/${route.params.id}`);
 };
 
 const toggleSave = () => {
-  isSaved.value = !isSaved.value;
+  if (!raw.value) return;
+  if (applicationStore.isJobSaved(raw.value.id)) {
+    applicationStore.unsaveJob(raw.value.id);
+    toast.info('Removed from saved jobs.');
+  } else {
+    applicationStore.saveJob(raw.value);
+    toast.success('Job saved.');
+  }
 };
 
 const scrollToSection = (index) => {

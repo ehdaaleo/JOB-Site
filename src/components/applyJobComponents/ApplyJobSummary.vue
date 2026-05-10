@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useJobStore } from '@/stores/jobStore';
 
 const props = defineProps({
@@ -10,18 +10,36 @@ const props = defineProps({
 });
 
 const jobStore = useJobStore();
-const job = computed(() => jobStore.getJobById(props.jobId));
+const local = ref(null);
 
-const jobTitle = computed(() => job.value?.title || 'Unknown Job');
-const companyName = computed(() => job.value?.company?.name || job.value?.company_name || 'Unknown Company');
-const companyLogo = computed(() => job.value?.company?.logo || job.value?.company_logo || null);
-const companyVerified = computed(() => job.value?.company?.verified ?? job.value?.company_verified ?? false);
+const ensure = async (id) => {
+  if (!id) return;
+  // Try the store first; otherwise hit the API.
+  const cached = jobStore.getJobById(id) || jobStore.currentJob
+  if (cached && String(cached.id) === String(id)) {
+    local.value = cached
+    return
+  }
+  local.value = await jobStore.fetchJobById(id)
+}
+
+onMounted(() => ensure(props.jobId))
+watch(() => props.jobId, ensure)
+
+const job = computed(() => local.value || {});
+const employer = computed(() => job.value?.employer || {});
+
+const jobTitle = computed(() => job.value?.title || '...');
+const companyName = computed(() =>
+  employer.value.company_name || employer.value.organization || employer.value.name || 'Company');
+const companyLogo = computed(() => employer.value.company_logo || job.value?.company_logo || null);
+const companyVerified = computed(() => !!employer.value.company_name);
 const location = computed(() => job.value?.location || 'Remote');
-const workType = computed(() => job.value?.workType || job.value?.work_type || 'Unknown');
-const salaryMin = computed(() => job.value?.salaryMin || job.value?.salary_min || 0);
-const salaryMax = computed(() => job.value?.salaryMax || job.value?.salary_max || 0);
-const type = computed(() => job.value?.type || 'Full-time');
-const deadline = computed(() => job.value?.deadline || 'Unknown');
+const workType = computed(() => (job.value?.work_type || '').replace('_', ' '));
+const salaryMin = computed(() => Number(job.value?.salary_min) || 0);
+const salaryMax = computed(() => Number(job.value?.salary_max) || 0);
+const type = computed(() => (job.value?.work_type || '').replace('_', ' '));
+const deadline = computed(() => job.value?.application_deadline || '—');
 </script>
 
 <template>

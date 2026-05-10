@@ -1,516 +1,193 @@
 /**
- * API Service - Mock API based on Retool API Generator format
- * This service simulates API endpoints for the job board platform
- * 
- * In production, replace mock data with actual API calls
+ * Single Laravel API client used everywhere in the SPA.
+ *
+ * Token persistence lives in src/stores/auth.js — this module just
+ * reads the current token from localStorage on every request and
+ * fires a window event on 401 so the auth store can react.
  */
 
 import axios from 'axios'
 
-// Create axios instance
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
-  timeout: 10000,
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL?.trim() || 'http://127.0.0.1:8000/api'
+
+const TOKEN_KEY = 'token'
+const USER_KEY = 'user'
+
+const http = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 15000,
   headers: {
-    'Content-Type': 'application/json'
-  }
+    Accept: 'application/json',
+    'Content-Type': 'application/json',
+  },
 })
 
-// Request interceptor - Add auth token
-api.interceptors.request.use(
-  config => {
-    const token = localStorage.getItem('token')
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
-    }
-    return config
-  },
-  error => Promise.reject(error)
-)
+http.interceptors.request.use((config) => {
+  const token =
+    localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY)
+  if (token) config.headers.Authorization = `Bearer ${token}`
+  // Let axios pick the right Content-Type for FormData uploads.
+  if (config.data instanceof FormData) delete config.headers['Content-Type']
+  return config
+})
 
-// Response interceptor - Handle errors
-api.interceptors.response.use(
-  response => response,
-  error => {
-    if (error.response?.status === 401) {
-      // Handle unauthorized - redirect to login
-      localStorage.removeItem('token')
-      window.location.href = '/login'
+http.interceptors.response.use(
+  (r) => r,
+  (error) => {
+    const status = error?.response?.status
+    if (status === 401) {
+      localStorage.removeItem(TOKEN_KEY)
+      sessionStorage.removeItem(TOKEN_KEY)
+      localStorage.removeItem(USER_KEY)
+      sessionStorage.removeItem(USER_KEY)
+      window.dispatchEvent(new CustomEvent('auth:unauthorized'))
     }
     return Promise.reject(error)
-  }
+  },
 )
 
-export default api
-
-// ==================== MOCK DATA ====================
-// These simulate what would come from Retool API Generator
-
-export const mockJobs = [
-  {
-    id: 1,
-    title: "Senior Frontend Developer",
-    company: {
-      id: 1,
-      name: "TechCorp Inc.",
-      logo: null,
-      location: "San Francisco, CA",
-      industry: "Technology"
-    },
-    location: "San Francisco, CA",
-    workType: "remote",
-    salaryMin: 120000,
-    salaryMax: 160000,
-    salaryPeriod: "yearly",
-    salaryCurrency: "USD",
-    skills: ["Vue.js", "React", "TypeScript", "Node.js", "GraphQL"],
-    description: "We're looking for a Senior Frontend Developer to join our team...",
-    responsibilities: "- Lead frontend development\n- Mentor junior developers\n- Collaborate with design team",
-    requirements: "- 5+ years frontend experience\n- Strong Vue.js/React skills\n- Experience with TypeScript",
-    category: "programming",
-    type: "full-time",
-    experienceLevel: "senior",
-    postedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-    deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-    featured: true,
-    status: "active",
-    applicationsCount: 12
-  },
-  {
-    id: 2,
-    title: "Product Manager",
-    company: {
-      id: 2,
-      name: "InnovateTech",
-      logo: null,
-      location: "New York, NY",
-      industry: "Software"
-    },
-    location: "New York, NY",
-    workType: "hybrid",
-    salaryMin: 130000,
-    salaryMax: 180000,
-    salaryPeriod: "yearly",
-    salaryCurrency: "USD",
-    skills: ["Product Strategy", "Agile", "User Research", "Analytics", "Roadmapping"],
-    description: "Join our product team to drive innovation...",
-    responsibilities: "- Define product roadmap\n- Work with engineering teams\n- Conduct user research",
-    requirements: "- 3+ years PM experience\n- Strong analytical skills\n- MBA preferred",
-    category: "management",
-    type: "full-time",
-    experienceLevel: "mid",
-    postedAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-    deadline: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000).toISOString(),
-    featured: true,
-    status: "active",
-    applicationsCount: 8
-  },
-  {
-    id: 3,
-    title: "UX/UI Designer",
-    company: {
-      id: 3,
-      name: "DesignStudio",
-      logo: null,
-      location: "Remote",
-      industry: "Design"
-    },
-    location: "Remote",
-    workType: "remote",
-    salaryMin: 90000,
-    salaryMax: 130000,
-    salaryPeriod: "yearly",
-    salaryCurrency: "USD",
-    skills: ["Figma", "Adobe XD", "User Research", "Prototyping", "Design Systems"],
-    description: "Create beautiful and intuitive user experiences...",
-    responsibilities: "- Design user interfaces\n- Conduct usability tests\n- Create design systems",
-    requirements: "- 4+ years UX/UI experience\n- Strong portfolio\n- Figma expertise",
-    category: "design",
-    type: "full-time",
-    experienceLevel: "mid",
-    postedAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
-    deadline: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000).toISOString(),
-    featured: true,
-    status: "active",
-    applicationsCount: 15
-  },
-  {
-    id: 4,
-    title: "Backend Engineer",
-    company: {
-      id: 4,
-      name: "CloudSystems",
-      logo: null,
-      location: "Austin, TX",
-      industry: "Cloud Computing"
-    },
-    location: "Austin, TX",
-    workType: "onsite",
-    salaryMin: 110000,
-    salaryMax: 150000,
-    salaryPeriod: "yearly",
-    salaryCurrency: "USD",
-    skills: ["Python", "Django", "PostgreSQL", "AWS", "Docker"],
-    description: "Build scalable backend services...",
-    responsibilities: "- Design API endpoints\n- Optimize database queries\n- Implement microservices",
-    requirements: "- 3+ years backend experience\n- Python/Django proficiency\n- Cloud experience",
-    category: "programming",
-    type: "full-time",
-    experienceLevel: "mid",
-    postedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-    deadline: new Date(Date.now() + 28 * 24 * 60 * 60 * 1000).toISOString(),
-    featured: false,
-    status: "active",
-    applicationsCount: 6
-  },
-  {
-    id: 5,
-    title: "DevOps Engineer",
-    company: {
-      id: 5,
-      name: "InfraTech",
-      logo: null,
-      location: "Seattle, WA",
-      industry: "Infrastructure"
-    },
-    location: "Seattle, WA",
-    workType: "hybrid",
-    salaryMin: 140000,
-    salaryMax: 190000,
-    salaryPeriod: "yearly",
-    salaryCurrency: "USD",
-    skills: ["Kubernetes", "Docker", "CI/CD", "Terraform", "AWS", "Linux"],
-    description: "Manage cloud infrastructure and CI/CD pipelines...",
-    responsibilities: "- Maintain Kubernetes clusters\n- Build CI/CD pipelines\n- Infrastructure as Code",
-    requirements: "- 4+ years DevOps experience\n- Strong Kubernetes knowledge\n- AWS certification preferred",
-    category: "programming",
-    type: "full-time",
-    experienceLevel: "senior",
-    postedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    deadline: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
-    featured: false,
-    status: "active",
-    applicationsCount: 9
-  },
-  {
-    id: 6,
-    title: "Marketing Manager",
-    company: {
-      id: 6,
-      name: "GrowthLabs",
-      logo: null,
-      location: "Los Angeles, CA",
-      industry: "Marketing"
-    },
-    location: "Los Angeles, CA",
-    workType: "onsite",
-    salaryMin: 80000,
-    salaryMax: 120000,
-    salaryPeriod: "yearly",
-    salaryCurrency: "USD",
-    skills: ["Digital Marketing", "SEO", "Analytics", "Content Strategy", "Social Media"],
-    description: "Lead marketing campaigns and brand strategy...",
-    responsibilities: "- Develop marketing strategy\n- Manage campaigns\n- Analyze performance metrics",
-    requirements: "- 5+ years marketing experience\n- Strong analytical skills\n- Experience with B2B marketing",
-    category: "marketing",
-    type: "full-time",
-    experienceLevel: "senior",
-    postedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-    deadline: new Date(Date.now() + 22 * 24 * 60 * 60 * 1000).toISOString(),
-    featured: false,
-    status: "active",
-    applicationsCount: 11
+/** Pull a friendly message out of any axios error. */
+export function apiErrorMessage(err, fallback = 'Something went wrong.') {
+  const data = err?.response?.data
+  if (data?.errors && typeof data.errors === 'object') {
+    const first = Object.values(data.errors)[0]
+    if (Array.isArray(first) && first.length) return first[0]
   }
-]
-
-export const mockCategories = [
-  { id: 1, name: "Programming", slug: "programming", jobCount: 2450, icon: "code" },
-  { id: 2, name: "Management", slug: "management", jobCount: 1230, icon: "briefcase" },
-  { id: 3, name: "Design", slug: "design", jobCount: 890, icon: "palette" },
-  { id: 4, name: "Marketing", slug: "marketing", jobCount: 1560, icon: "megaphone" },
-  { id: 5, name: "Sales", slug: "sales", jobCount: 1120, icon: "chart" },
-  { id: 6, name: "Human Resources", slug: "hr", jobCount: 650, icon: "users" },
-  { id: 7, name: "Finance", slug: "finance", jobCount: 780, icon: "dollar" },
-  { id: 8, name: "Customer Service", slug: "customer-service", jobCount: 920, icon: "headset" }
-]
-
-export const mockCompanies = [
-  {
-    id: 1,
-    name: "TechCorp Inc.",
-    tagline: "Building the future of technology",
-    location: "San Francisco, CA",
-    industry: "Technology",
-    jobCount: 45,
-    rating: 4.8,
-    isHiring: true,
-    openJobs: [
-      {
-        id: 1,
-        title: "Senior Frontend Developer",
-        location: "San Francisco, CA",
-        workType: "remote",
-        salaryMin: 120000,
-        salaryMax: 160000,
-        type: "full-time"
-      }
-    ]
-  },
-  {
-    id: 2,
-    name: "InnovateTech",
-    tagline: "Innovation starts here",
-    location: "New York, NY",
-    industry: "Software",
-    jobCount: 32,
-    rating: 4.7,
-    isHiring: true,
-    openJobs: [
-      {
-        id: 2,
-        title: "Product Manager",
-        location: "New York, NY",
-        workType: "hybrid",
-        salaryMin: 130000,
-        salaryMax: 180000,
-        type: "full-time"
-      }
-    ]
-  },
-  {
-    id: 3,
-    name: "DesignStudio",
-    tagline: "Design that inspires",
-    location: "Remote",
-    industry: "Design",
-    jobCount: 18,
-    rating: 4.9,
-    isHiring: true,
-    openJobs: [
-      {
-        id: 3,
-        title: "UX/UI Designer",
-        location: "Remote",
-        workType: "remote",
-        salaryMin: 90000,
-        salaryMax: 130000,
-        type: "full-time"
-      }
-    ]
-  },
-  {
-    id: 4,
-    name: "CloudSystems",
-    tagline: "Cloud solutions for everyone",
-    location: "Austin, TX",
-    industry: "Cloud Computing",
-    jobCount: 28,
-    rating: 4.6,
-    isHiring: true,
-    openJobs: [
-      {
-        id: 4,
-        title: "Backend Engineer",
-        location: "Austin, TX",
-        workType: "onsite",
-        salaryMin: 110000,
-        salaryMax: 150000,
-        type: "full-time"
-      }
-    ]
-  },
-  {
-    id: 5,
-    name: "InfraTech",
-    tagline: "Next-gen infrastructure solutions",
-    location: "Seattle, WA",
-    industry: "Infrastructure",
-    jobCount: 15,
-    rating: 4.7,
-    isHiring: true,
-    openJobs: [
-      {
-        id: 5,
-        title: "DevOps Engineer",
-        location: "Seattle, WA",
-        workType: "hybrid",
-        salaryMin: 140000,
-        salaryMax: 190000,
-        type: "full-time"
-      }
-    ]
-  },
-  {
-    id: 6,
-    name: "GrowthLabs",
-    tagline: "Data-driven marketing",
-    location: "Los Angeles, CA",
-    industry: "Marketing",
-    jobCount: 22,
-    rating: 4.5,
-    isHiring: true,
-    openJobs: [
-      {
-        id: 6,
-        title: "Marketing Manager",
-        location: "Los Angeles, CA",
-        workType: "onsite",
-        salaryMin: 80000,
-        salaryMax: 120000,
-        type: "full-time"
-      }
-    ]
-  }
-]
-
-// ==================== API METHODS ====================
-
-/**
- * Fetch all jobs with optional filters
- * @param {Object} params - Query parameters (keyword, location, category, etc.)
- * @returns {Promise}
- */
-export const fetchJobs = async (params = {}) => {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 500))
-  
-  let jobs = [...mockJobs]
-  
-  // Apply filters
-  if (params.keyword) {
-    const keyword = params.keyword.toLowerCase()
-    jobs = jobs.filter(job => 
-      job.title.toLowerCase().includes(keyword) ||
-      job.description.toLowerCase().includes(keyword) ||
-      job.skills.some(skill => skill.toLowerCase().includes(keyword))
-    )
-  }
-  
-  if (params.location) {
-    const location = params.location.toLowerCase()
-    jobs = jobs.filter(job => 
-      job.location.toLowerCase().includes(location) ||
-      job.workType === location
-    )
-  }
-  
-  if (params.category) {
-    jobs = jobs.filter(job => job.category === params.category)
-  }
-  
-  if (params.workType) {
-    jobs = jobs.filter(job => job.workType === params.workType)
-  }
-  
-  if (params.experienceLevel) {
-    jobs = jobs.filter(job => job.experienceLevel === params.experienceLevel)
-  }
-  
-  // Featured jobs first
-  jobs.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0))
-  
-  return { data: jobs, total: jobs.length }
+  return data?.message || err?.message || fallback
 }
 
-/**
- * Fetch single job by ID
- * @param {number} id - Job ID
- * @returns {Promise}
- */
-export const fetchJobById = async (id) => {
-  await new Promise(resolve => setTimeout(resolve, 300))
-  const job = mockJobs.find(j => j.id === parseInt(id))
-  return { data: job }
+// ── Auth ────────────────────────────────────────────────────────────────────
+export const authApi = {
+  register: (payload) => http.post('/register', payload).then((r) => r.data),
+  login: (payload) => http.post('/login', payload).then((r) => r.data),
+  logout: () => http.post('/logout').then((r) => r.data),
+  me: () => http.get('/me').then((r) => r.data),
 }
 
-/**
- * Fetch featured jobs
- * @returns {Promise}
- */
-export const fetchFeaturedJobs = async () => {
-  await new Promise(resolve => setTimeout(resolve, 400))
-  const featured = mockJobs.filter(job => job.featured)
-  return { data: featured }
+// ── Public / homepage ───────────────────────────────────────────────────────
+export const publicApi = {
+  homeData: () => http.get('/home-data').then((r) => r.data),
 }
 
-/**
- * Fetch all categories
- * @returns {Promise}
- */
-export const fetchCategories = async () => {
-  await new Promise(resolve => setTimeout(resolve, 300))
-  return { data: mockCategories }
-}
-
-export const fetchCompanies = async () => {
-  await new Promise(resolve => setTimeout(resolve, 400))
-  return { data: mockCompanies }
-}
-
-/**
- * Fetch company by id
- * @returns {Promise}
- */
-export const fetchCompanyById = async (id) => {
-  await new Promise(resolve => setTimeout(resolve, 300))
-  const company = mockCompanies.find(c => c.id === parseInt(id))
-  return { data: company }
-}
-
-/**
- * Submit job application
- * @param {Object} applicationData - Application form data
- * @returns {Promise}
- */
-export const submitApplication = async (applicationData) => {
-  await new Promise(resolve => setTimeout(resolve, 800))
-  // In production: return await api.post('/applications', applicationData)
-  return { 
-    data: { 
-      id: Math.random().toString(36).substr(2, 9),
-      ...applicationData,
-      status: 'pending',
-      createdAt: new Date().toISOString()
-    } 
-  }
-}
-
-/**
- * User authentication
- * @param {Object} credentials - Email and password
- * @returns {Promise}
- */
-export const login = async (credentials) => {
-  await new Promise(resolve => setTimeout(resolve, 600))
-  // Mock login - in production use real API
-  return {
-    data: {
-      user: {
-        id: 1,
-        name: "John Doe",
-        email: credentials.email,
-        role: "candidate"
-      },
-      token: "mock-jwt-token-" + Date.now()
+// ── Profile ─────────────────────────────────────────────────────────────────
+export const profileApi = {
+  show: () => http.get('/profile').then((r) => r.data),
+  update: (payload) => {
+    // POST /profile may receive multipart for resume/avatar uploads.
+    if (payload instanceof FormData) {
+      return http.post('/profile', payload).then((r) => r.data)
     }
-  }
+    return http.post('/profile', payload).then((r) => r.data)
+  },
 }
 
-/**
- * User registration
- * @param {Object} userData - Registration form data
- * @returns {Promise}
- */
-export const register = async (userData) => {
-  await new Promise(resolve => setTimeout(resolve, 800))
-  return {
-    data: {
-      user: {
-        id: Math.random(),
-        ...userData
-      },
-      token: "mock-jwt-token-" + Date.now()
-    }
-  }
+// ── Jobs ────────────────────────────────────────────────────────────────────
+export const jobApi = {
+  list: (params = {}) => http.get('/jobs', { params }).then((r) => r.data),
+  // Admin: include `status: 'pending' | 'rejected'`. Employer: include
+  // `mine: 1` plus optional status. Otherwise the public list returns
+  // approved jobs only.
+  show: (id) => http.get(`/jobs/${id}`).then((r) => r.data),
+  create: (payload) => http.post('/jobs', payload).then((r) => r.data),
+  update: (id, payload) => http.put(`/jobs/${id}`, payload).then((r) => r.data),
+  destroy: (id) => http.delete(`/jobs/${id}`).then((r) => r.data),
+  approve: (id) => http.post(`/jobs/${id}/approve`).then((r) => r.data),
+  reject: (id, reason) =>
+    http.post(`/jobs/${id}/reject`, { reason }).then((r) => r.data),
 }
 
+// ── Applications ────────────────────────────────────────────────────────────
+export const applicationApi = {
+  listForJob: (jobId, params = {}) =>
+    http.get(`/jobs/${jobId}/applications`, { params }).then((r) => r.data),
+  apply: (jobId, payload) =>
+    http.post(`/jobs/${jobId}/applications`, payload).then((r) => r.data),
+  show: (jobId, applicationId) =>
+    http
+      .get(`/jobs/${jobId}/applications/${applicationId}`)
+      .then((r) => r.data),
+  update: (jobId, applicationId, payload) =>
+    http
+      .put(`/jobs/${jobId}/applications/${applicationId}`, payload)
+      .then((r) => r.data),
+  withdraw: (jobId, applicationId) =>
+    http
+      .delete(`/jobs/${jobId}/applications/${applicationId}`)
+      .then((r) => r.data),
+  updateStatus: (applicationId, status, rejection_reason = null) =>
+    http
+      .post(`/applications/${applicationId}/status`, {
+        status,
+        rejection_reason,
+      })
+      .then((r) => r.data),
+}
+
+// ── Payments (PayPal) ───────────────────────────────────────────────────────
+export const paymentApi = {
+  createOrder: (applicationId, amount, currency = 'USD') =>
+    http
+      .post(`/applications/${applicationId}/payment/paypal/create`, {
+        amount,
+        currency,
+      })
+      .then((r) => r.data),
+  captureOrder: (applicationId, paypalOrderId) =>
+    http
+      .post(`/applications/${applicationId}/payment/paypal/capture`, {
+        paypal_order_id: paypalOrderId,
+      })
+      .then((r) => r.data),
+  show: (paymentId) => http.get(`/payments/${paymentId}`).then((r) => r.data),
+  list: (params = {}) => http.get('/payments', { params }).then((r) => r.data),
+}
+
+// ── Comments ────────────────────────────────────────────────────────────────
+export const commentApi = {
+  listForJob: (jobId, params = {}) =>
+    http.get(`/jobs/${jobId}/comments`, { params }).then((r) => r.data),
+  add: (jobId, content) =>
+    http.post(`/jobs/${jobId}/comments`, { content }).then((r) => r.data),
+  update: (jobId, commentId, content) =>
+    http
+      .put(`/jobs/${jobId}/comments/${commentId}`, { content })
+      .then((r) => r.data),
+  destroy: (jobId, commentId) =>
+    http.delete(`/jobs/${jobId}/comments/${commentId}`).then((r) => r.data),
+  approve: (commentId) =>
+    http.post(`/comments/${commentId}/approve`).then((r) => r.data),
+}
+
+// ── Categories ──────────────────────────────────────────────────────────────
+export const categoryApi = {
+  list: () => http.get('/categories').then((r) => r.data),
+  create: (payload) => http.post('/categories', payload).then((r) => r.data),
+  update: (id, payload) =>
+    http.put(`/categories/${id}`, payload).then((r) => r.data),
+  destroy: (id) => http.delete(`/categories/${id}`).then((r) => r.data),
+}
+
+// ── Companies (aggregated employers) ────────────────────────────────────────
+export const companyApi = {
+  list: (params = {}) =>
+    http.get('/companies', { params }).then((r) => r.data),
+  show: (id) => http.get(`/companies/${id}`).then((r) => r.data),
+}
+
+// ── Dashboards ──────────────────────────────────────────────────────────────
+export const candidateApi = {
+  dashboard: () => http.get('/candidate/dashboard').then((r) => r.data),
+  applications: () => http.get('/candidate/applications').then((r) => r.data),
+}
+
+export const adminApi = {
+  dashboard: () => http.get('/admin/dashboard').then((r) => r.data),
+  users: (params = {}) =>
+    http.get('/admin/users', { params }).then((r) => r.data),
+  deleteUser: (id) => http.delete(`/admin/users/${id}`).then((r) => r.data),
+  updateUserRole: (id, role) =>
+    http.post(`/admin/users/${id}/role`, { role }).then((r) => r.data),
+}
+
+export default http

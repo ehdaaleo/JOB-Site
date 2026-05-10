@@ -19,7 +19,7 @@ defineProps({
           <div class="h-4 bg-slate-200 rounded w-5/6"></div>
           <div class="h-4 bg-slate-200 rounded w-4/6"></div>
         </div>
-        <p v-else>{{ company.description || company.tagline || company.company?.description || company.company?.tagline || 'No description provided.' }}</p>
+        <p v-else>{{ company.description || company.company_description || 'No description provided.' }}</p>
       </div>
     </section>
 
@@ -42,9 +42,9 @@ defineProps({
                 {{ job.title }}
               </RouterLink>
               <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-500 font-medium">
-                <span class="flex items-center gap-1.5 capitalize">
+                <span v-if="job.work_type" class="flex items-center gap-1.5 capitalize">
                   <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-                  {{ job.workType }}
+                  {{ job.work_type.replace('_', ' ') }}
                 </span>
                 <span class="flex items-center gap-1.5">
                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -53,8 +53,16 @@ defineProps({
                   </svg>
                   {{ job.location }}
                 </span>
-                <span v-if="job.salaryMin" class="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md text-xs font-bold">
-                  ${{ job.salaryMin/1000 }}k - ${{ job.salaryMax/1000 }}k
+                <span v-if="job.salary_min || job.salary_max" class="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md text-xs font-bold">
+                  <template v-if="job.salary_min && job.salary_max">
+                    ${{ Math.round(Number(job.salary_min) / 1000) }}k - ${{ Math.round(Number(job.salary_max) / 1000) }}k
+                  </template>
+                  <template v-else-if="job.salary_min">
+                    ${{ Math.round(Number(job.salary_min) / 1000) }}k+
+                  </template>
+                  <template v-else>
+                    up to ${{ Math.round(Number(job.salary_max) / 1000) }}k
+                  </template>
                 </span>
               </div>
             </div>

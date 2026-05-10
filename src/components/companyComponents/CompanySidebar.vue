@@ -1,12 +1,8 @@
 <script setup>
 defineProps({
   company: Object,
-  loading: Boolean
+  loading: Boolean,
 })
-
-const getEmployeeCount = (jobCount) => {
-  return Math.floor((jobCount || 0) * 2) + 10
-}
 </script>
 <template>
   <div class="space-y-8">
@@ -33,7 +29,7 @@ const getEmployeeCount = (jobCount) => {
           <div>
             <p class="text-sm font-semibold text-slate-400 uppercase tracking-wider">Company Size</p>
             <p class="text-slate-900 font-bold">
-              {{ company.company?.size || (company.jobCount ? getEmployeeCount(company.jobCount) + '+' : 'N/A') }} employees
+              {{ company.size || 'N/A' }}
             </p>
           </div>
         </div>
@@ -45,8 +41,8 @@ const getEmployeeCount = (jobCount) => {
             </svg>
           </div>
           <div>
-            <p class="text-sm font-semibold text-slate-400 uppercase tracking-wider">Origin</p>
-            <p class="text-slate-900 font-bold">{{ company.location || company.company?.location || 'N/A' }}</p>
+            <p class="text-sm font-semibold text-slate-400 uppercase tracking-wider">Location</p>
+            <p class="text-slate-900 font-bold">{{ company.location || 'N/A' }}</p>
           </div>
         </div>
       </div>

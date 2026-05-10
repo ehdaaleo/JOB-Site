@@ -4,7 +4,46 @@
  */
 
 import { ref, computed } from 'vue'
-import axios from 'axios'
+import { jobApi, companyApi } from '@/services/api'
+
+/**
+ * Pulls a paginated Laravel jobs response down to a flat array.
+ * The chatbot then only depends on the shape of an individual job.
+ */
+async function fetchJobsForChat(params = {}) {
+  const res = await jobApi.list({ per_page: 25, ...params })
+  return res.data || []
+}
+
+async function fetchCompaniesForChat(params = {}) {
+  const res = await companyApi.list({ per_page: 12, ...params })
+  return res.data || []
+}
+
+/** Translate a Laravel job into the flat shape the chatbot already prints. */
+function flattenJob(j) {
+  return {
+    id: j.id,
+    title: j.title,
+    location: j.location,
+    workType: j.work_type,
+    type: j.work_type,
+    company: { name: j.employer?.company_name || j.employer?.name || 'Company' },
+    salaryMin: j.salary_min ? Number(j.salary_min) : null,
+    salaryMax: j.salary_max ? Number(j.salary_max) : null,
+    experienceLevel: j.experience_level,
+  }
+}
+
+function flattenCompany(c) {
+  return {
+    id: c.id,
+    name: c.company_name || c.organization || c.name,
+    industry: c.industry || '—',
+    location: c.location || '—',
+    jobCount: c.approved_jobs_count ?? '—',
+  }
+}
 
 export function useChatbot() {
   const messages = ref([])
@@ -16,9 +55,6 @@ export function useChatbot() {
     userPreferences: {},
     searchHistory: []
   })
-
-  // API base URL from environment
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
   /**
    * Add a message to the chat
@@ -336,9 +372,8 @@ export function useChatbot() {
       // Extract search parameters from message
       const params = extractSearchParams(message)
       
-      // Fetch jobs from API
-      const response = await axios.get(`${API_BASE_URL}/jobs`, { params })
-      let jobs = response.data
+      // Fetch jobs from Laravel API
+      let jobs = (await fetchJobsForChat(params)).map(flattenJob)
 
       if (jobs.length === 0) {
         return getNoResultsResponse(message)
@@ -438,14 +473,14 @@ export function useChatbot() {
       }
     }
 
-    // Extract job type
-    if (lowerMessage.includes('remote')) params.workType = 'remote'
-    if (lowerMessage.includes('hybrid')) params.workType = 'hybrid'
-    if (lowerMessage.includes('onsite') || lowerMessage.includes('on-site')) params.workType = 'onsite'
-    if (lowerMessage.includes('full-time') || lowerMessage.includes('full time')) params.type = 'full-time'
-    if (lowerMessage.includes('part-time') || lowerMessage.includes('part time')) params.type = 'part-time'
-    if (lowerMessage.includes('contract')) params.type = 'contract'
-    if (lowerMessage.includes('internship') || lowerMessage.includes('intern')) params.type = 'internship'
+    // Extract job type — Laravel work_type enum
+    if (lowerMessage.includes('remote')) params.work_type = 'remote'
+    else if (lowerMessage.includes('hybrid')) params.work_type = 'hybrid'
+    else if (lowerMessage.includes('onsite') || lowerMessage.includes('on-site')) params.work_type = 'onsite'
+    else if (lowerMessage.includes('full-time') || lowerMessage.includes('full time')) params.work_type = 'full_time'
+    else if (lowerMessage.includes('part-time') || lowerMessage.includes('part time')) params.work_type = 'part_time'
+    else if (lowerMessage.includes('contract')) params.work_type = 'contract'
+    else if (lowerMessage.includes('internship') || lowerMessage.includes('intern')) params.work_type = 'internship'
 
     // Extract category
     const categoryMap = {
@@ -466,15 +501,20 @@ export function useChatbot() {
       }
     }
 
-    // Extract experience level
-    if (lowerMessage.includes('senior') || lowerMessage.includes('sr.')) params.experienceLevel = 'senior'
-    if (lowerMessage.includes('junior') || lowerMessage.includes('jr.') || lowerMessage.includes('entry')) params.experienceLevel = 'junior'
-    if (lowerMessage.includes('mid') || lowerMessage.includes('intermediate')) params.experienceLevel = 'mid'
+    // Extract experience level — Laravel experience_level enum
+    if (lowerMessage.includes('senior') || lowerMessage.includes('sr.')) params.experience_level = 'senior'
+    else if (lowerMessage.includes('junior') || lowerMessage.includes('jr.') || lowerMessage.includes('entry')) params.experience_level = 'junior'
+    else if (lowerMessage.includes('mid') || lowerMessage.includes('intermediate')) params.experience_level = 'mid'
 
     // Extract salary expectations
     const salaryMatch = lowerMessage.match(/(\d+)[k]?\s*(?:salary|pay|compensation)/i)
     if (salaryMatch) {
-      params.minSalary = parseInt(salaryMatch[1]) * 1000
+      params.salary_min = parseInt(salaryMatch[1]) * 1000
+    }
+
+    // search keyword falls back to plain message tokens
+    if (!params.search) {
+      params.search = message
     }
 
     return params
@@ -516,8 +556,7 @@ export function useChatbot() {
    */
   const handleCompanyQuery = async (message) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/companies`)
-      let companies = response.data
+      let companies = (await fetchCompaniesForChat()).map(flattenCompany)
 
       if (companies.length === 0) {
         return "We're currently building our company network. Check back soon for exciting opportunities!"
@@ -560,8 +599,7 @@ export function useChatbot() {
    */
   const handleSalaryQuery = async (message) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/jobs`)
-      const jobs = response.data
+      const jobs = (await fetchJobsForChat()).map(flattenJob)
 
       if (jobs.length === 0) {
         return "I don't have salary data available right now. Please check individual job listings for compensation details."
@@ -615,8 +653,9 @@ export function useChatbot() {
    */
   const handleRemoteWorkQuery = async (message) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/jobs`, { params: { workType: 'remote' } })
-      const remoteJobs = response.data
+      const remoteJobs = (
+        await fetchJobsForChat({ work_type: 'remote' })
+      ).map(flattenJob)
 
       if (remoteJobs.length === 0) {
         return "I don't see any remote positions available right now, but new jobs are added regularly. Check the Jobs page and filter by 'Remote' to see the latest opportunities!"

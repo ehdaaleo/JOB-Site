@@ -1,147 +1,136 @@
 <script setup>
-import { ref, computed } from 'vue'
-import { useJobStore } from '../../stores/jobStore'
+import { ref, computed, onMounted } from 'vue'
+import { adminApi, apiErrorMessage } from '@/services/api'
+import Navbar from '@/components/homePageComponents/navbar.vue'
+import Footer from '@/components/homePageComponents/footer.vue'
 
-const jobStore = useJobStore()
+const data = ref(null)
+const isLoading = ref(true)
+const error = ref(null)
 
-const stats = computed(() => [
-  { label: 'Total Jobs', value: jobStore.allJobs.length, icon: 'briefcase' },
-  { label: 'Active Jobs', value: jobStore.activeJobs.length, icon: 'check' },
-  { label: 'Pending Approval', value: jobStore.pendingJobs.length, icon: 'clock' },
-  { label: 'Total Users', value: '5,678', icon: 'users' },
-])
+const stats = computed(() => {
+  const s = data.value?.stats || {}
+  return [
+    { label: 'Total Users', value: s.total_users ?? 0 },
+    { label: 'Total Jobs', value: s.total_jobs ?? 0 },
+    { label: 'Pending Jobs', value: s.pending_jobs ?? 0 },
+    { label: 'Total Applications', value: s.total_applications ?? 0 },
+  ]
+})
 
-const recentJobs = computed(() => jobStore.allJobs.slice(0, 5))
+const recentJobs = computed(() => data.value?.recent_jobs || [])
+const recentApplications = computed(() => data.value?.recent_applications || [])
 
-const recentUsers = ref([
-  { id: 1, name: 'John Doe', email: 'john@example.com', role: 'candidate', date: '2024-01-15' },
-  { id: 2, name: 'Sarah Smith', email: 'sarah@example.com', role: 'employer', date: '2024-01-14' },
-  { id: 3, name: 'Mike Johnson', email: 'mike@example.com', role: 'candidate', date: '2024-01-13' },
-])
+const formatDate = (iso) => (iso ? new Date(iso).toLocaleDateString() : '')
 
-const getStatusClass = (status) => {
-  const classes = { active: 'bg-green-100 text-green-700', pending: 'bg-yellow-100 text-yellow-700', rejected: 'bg-red-100 text-red-700' }
-  return classes[status] || 'bg-gray-100 text-gray-700'
-}
+const getStatusClass = (status) =>
+  ({
+    approved: 'bg-green-100 text-green-700',
+    pending: 'bg-yellow-100 text-yellow-700',
+    rejected: 'bg-red-100 text-red-700',
+    closed: 'bg-gray-100 text-gray-700',
+    accepted: 'bg-green-100 text-green-700',
+    reviewed: 'bg-blue-100 text-blue-700',
+    shortlisted: 'bg-indigo-100 text-indigo-700',
+  })[status] || 'bg-gray-100 text-gray-700'
 
-const getRoleClass = (role) => {
-  const classes = { employer: 'bg-blue-100 text-blue-700', candidate: 'bg-purple-100 text-purple-700', admin: 'bg-red-100 text-red-700' }
-  return classes[role] || 'bg-gray-100 text-gray-700'
-}
-
-const formatDate = (dateString) => {
-  return new Date(dateString).toLocaleDateString()
-}
+onMounted(async () => {
+  try {
+    const res = await adminApi.dashboard()
+    data.value = res.data ?? res
+  } catch (err) {
+    error.value = apiErrorMessage(err, 'Failed to load admin dashboard.')
+  } finally {
+    isLoading.value = false
+  }
+})
 </script>
 
 <template>
-  <div class="admin-dashboard">
-    <!-- Header -->
-    <div class="bg-white border-b border-gray-200 px-6 py-4">
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p class="text-sm text-gray-500">Manage the job board platform</p>
-        </div>
-        <div class="flex items-center gap-4">
-          <span class="text-sm text-gray-500">Welcome, Admin</span>
-          <div class="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 flex items-center justify-center text-white font-bold">
-            A
-          </div>
-        </div>
+  <Navbar />
+  <div class="bg-slate-50 min-h-screen pb-20 pt-16">
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+      <div class="bg-white border border-gray-200 rounded-xl px-6 py-4">
+        <h1 class="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+        <p class="text-sm text-gray-500">Manage the job board platform</p>
       </div>
-    </div>
 
-    <!-- Stats -->
-    <div class="p-6">
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div v-if="error" class="mt-6 bg-red-50 border border-red-200 text-red-700 rounded-lg p-4">{{ error }}</div>
+
+      <div class="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div v-for="stat in stats" :key="stat.label" class="bg-white rounded-xl border border-gray-200 p-6">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm text-gray-500">{{ stat.label }}</p>
-              <p class="text-3xl font-bold text-gray-900 mt-1">{{ stat.value }}</p>
-            </div>
-            <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center">
-              <svg class="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-            </div>
-          </div>
+          <p class="text-sm text-gray-500">{{ stat.label }}</p>
+          <p class="text-3xl font-bold text-gray-900 mt-1">{{ stat.value }}</p>
         </div>
       </div>
 
-      <!-- Tables -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-        <!-- Recent Jobs -->
         <div class="bg-white rounded-xl border border-gray-200">
           <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
             <h2 class="text-lg font-semibold text-gray-900">Recent Jobs</h2>
-            <a href="/admin/pending-jobs" class="text-sm text-blue-600 hover:text-blue-700">View All</a>
+            <RouterLink to="/admin/pending-jobs" class="text-sm text-blue-600 hover:text-blue-700">Pending →</RouterLink>
           </div>
           <div class="p-6">
-            <div class="overflow-x-auto">
-              <table class="w-full">
-                <thead>
-                  <tr class="text-left text-xs text-gray-500 uppercase">
-                    <th class="pb-3">Job Title</th>
-                    <th class="pb-3">Company</th>
-                    <th class="pb-3">Status</th>
-                    <th class="pb-3">Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="job in recentJobs" :key="job.id" class="border-t border-gray-100">
-                    <td class="py-3 text-sm font-medium text-gray-900">{{ job.title }}</td>
-                    <td class="py-3 text-sm text-gray-500">{{ job.company.name }}</td>
-                    <td class="py-3">
-                      <span :class="`text-xs px-2 py-1 rounded-full font-medium ${getStatusClass(job.status)}`">
-                        {{ job.status }}
-                      </span>
-                    </td>
-                    <td class="py-3 text-sm text-gray-500">{{ formatDate(job.postedAt) }}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            <table class="w-full">
+              <thead>
+                <tr class="text-left text-xs text-gray-500 uppercase">
+                  <th class="pb-3">Title</th>
+                  <th class="pb-3">Employer</th>
+                  <th class="pb-3">Status</th>
+                  <th class="pb-3">Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="job in recentJobs" :key="job.id" class="border-t border-gray-100">
+                  <td class="py-3 text-sm font-medium text-gray-900">{{ job.title }}</td>
+                  <td class="py-3 text-sm text-gray-500">{{ job.employer?.name }}</td>
+                  <td class="py-3">
+                    <span :class="`text-xs px-2 py-1 rounded-full font-medium capitalize ${getStatusClass(job.status)}`">{{ job.status }}</span>
+                  </td>
+                  <td class="py-3 text-sm text-gray-500">{{ formatDate(job.created_at) }}</td>
+                </tr>
+                <tr v-if="!isLoading && recentJobs.length === 0">
+                  <td colspan="4" class="py-6 text-center text-gray-400">No jobs yet.</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
-        <!-- Recent Users -->
         <div class="bg-white rounded-xl border border-gray-200">
-          <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-            <h2 class="text-lg font-semibold text-gray-900">Recent Users</h2>
-            <a href="/admin/users" class="text-sm text-blue-600 hover:text-blue-700">View All</a>
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">Recent Applications</h2>
           </div>
           <div class="p-6">
-            <div class="overflow-x-auto">
-              <table class="w-full">
-                <thead>
-                  <tr class="text-left text-xs text-gray-500 uppercase">
-                    <th class="pb-3">Name</th>
-                    <th class="pb-3">Email</th>
-                    <th class="pb-3">Role</th>
-                    <th class="pb-3">Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="user in recentUsers" :key="user.id" class="border-t border-gray-100">
-                    <td class="py-3 text-sm font-medium text-gray-900">{{ user.name }}</td>
-                    <td class="py-3 text-sm text-gray-500">{{ user.email }}</td>
-                    <td class="py-3">
-                      <span :class="`text-xs px-2 py-1 rounded-full font-medium ${getRoleClass(user.role)}`">
-                        {{ user.role }}
-                      </span>
-                    </td>
-                    <td class="py-3 text-sm text-gray-500">{{ user.date }}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            <table class="w-full">
+              <thead>
+                <tr class="text-left text-xs text-gray-500 uppercase">
+                  <th class="pb-3">Candidate</th>
+                  <th class="pb-3">Job</th>
+                  <th class="pb-3">Status</th>
+                  <th class="pb-3">Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="app in recentApplications" :key="app.id" class="border-t border-gray-100">
+                  <td class="py-3 text-sm font-medium text-gray-900">{{ app.candidate?.name }}</td>
+                  <td class="py-3 text-sm text-gray-500">{{ app.job?.title }}</td>
+                  <td class="py-3">
+                    <span :class="`text-xs px-2 py-1 rounded-full font-medium capitalize ${getStatusClass(app.status)}`">{{ app.status }}</span>
+                  </td>
+                  <td class="py-3 text-sm text-gray-500">{{ formatDate(app.created_at) }}</td>
+                </tr>
+                <tr v-if="!isLoading && recentApplications.length === 0">
+                  <td colspan="4" class="py-6 text-center text-gray-400">No applications yet.</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
     </div>
   </div>
+  <Footer />
 </template>
 
 <style scoped>

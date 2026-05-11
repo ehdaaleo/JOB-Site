@@ -36,6 +36,10 @@ const errorMessage = ref('')
 const success = ref(false)
 const processing = ref(false)
 const amount = ref(50.0)
+// Last Payment row id from create() — used by the Verify button when
+// capture fails so we can ask the backend to re-check PayPal.
+const lastPaymentId = ref(null)
+const verifying = ref(false)
 
 let paypalButtonsInstance = null
 
@@ -97,6 +101,7 @@ async function mountPayPal() {
             Number(amount.value),
             'USD',
           )
+          lastPaymentId.value = order.payment_id
           return order.paypal_order_id
         } catch (err) {
           errorMessage.value = paymentStore.error || apiErrorMessage(err, 'Failed to start payment.')
@@ -126,6 +131,31 @@ async function mountPayPal() {
     await paypalButtonsInstance.render('#paypal-button-container')
   } catch (err) {
     errorMessage.value = apiErrorMessage(err, 'Failed to load PayPal.')
+  }
+}
+
+/**
+ * Re-check the payment against PayPal. Useful when capture failed
+ * mid-flight (network, SSL, or browser closed) — the buyer may have
+ * actually paid on PayPal's side and the backend just couldn't confirm.
+ */
+async function verifyNow() {
+  if (!lastPaymentId.value) return
+  verifying.value = true
+  errorMessage.value = ''
+  try {
+    const res = await paymentStore.verifyPayment(lastPaymentId.value)
+    const status = res?.data?.status
+    if (status === 'succeeded' || res?.data?.application?.payment_status === 'paid') {
+      success.value = true
+      setTimeout(() => router.push({ name: 'view-applications' }), 2000)
+    } else {
+      errorMessage.value = res?.message || 'Payment is not completed yet.'
+    }
+  } catch (err) {
+    errorMessage.value = paymentStore.error || apiErrorMessage(err, 'Could not verify payment.')
+  } finally {
+    verifying.value = false
   }
 }
 
@@ -205,7 +235,18 @@ onBeforeUnmount(() => {
 
             <div v-else class="flex-grow">
               <div v-if="errorMessage" class="mb-6 p-4 bg-red-50 border border-red-100 text-red-700 rounded-xl text-sm">
-                {{ errorMessage }}
+                <p>{{ errorMessage }}</p>
+                <button
+                  v-if="lastPaymentId"
+                  @click="verifyNow"
+                  :disabled="verifying"
+                  class="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-60"
+                >
+                  {{ verifying ? 'Verifying…' : 'Verify with PayPal' }}
+                </button>
+                <p v-if="lastPaymentId" class="mt-2 text-xs text-red-600/80">
+                  If the buyer already approved on PayPal, this re-checks the order and marks the payment paid when PayPal confirms.
+                </p>
               </div>
 
               <div id="paypal-button-container"></div>

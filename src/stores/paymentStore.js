@@ -63,6 +63,25 @@ export const usePaymentStore = defineStore('payments', () => {
     }
   }
 
+  /**
+   * Re-sync this payment against PayPal. Returns { message, data }.
+   * On success the application's payment_status flips to 'paid'.
+   */
+  async function verifyPayment(paymentId) {
+    isLoading.value = true
+    error.value = null
+    try {
+      const res = await paymentApi.verify(paymentId)
+      lastPayment.value = res.data ?? res
+      return res
+    } catch (err) {
+      error.value = apiErrorMessage(err, 'Could not verify payment.')
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   function clearError() {
     error.value = null
   }
@@ -75,6 +94,7 @@ export const usePaymentStore = defineStore('payments', () => {
     createOrder,
     captureOrder,
     fetchPayment,
+    verifyPayment,
     clearError,
   }
 })

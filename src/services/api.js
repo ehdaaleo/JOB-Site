@@ -144,6 +144,11 @@ export const paymentApi = {
       .then((r) => r.data),
   show: (paymentId) => http.get(`/payments/${paymentId}`).then((r) => r.data),
   list: (params = {}) => http.get('/payments', { params }).then((r) => r.data),
+  // Re-sync the payment against PayPal's view of the order. Use this when
+  // capture failed mid-flight (browser closed, SSL error, etc.) and the
+  // local DB may be out of sync with PayPal.
+  verify: (paymentId) =>
+    http.post(`/payments/${paymentId}/verify`).then((r) => r.data),
 }
 
 // ── Comments ────────────────────────────────────────────────────────────────

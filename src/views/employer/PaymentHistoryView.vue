@@ -2,10 +2,12 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { paymentApi, apiErrorMessage } from '@/services/api'
+import { useToast } from 'vue-toastification'
 import Navbar from '@/components/homePageComponents/navbar.vue'
 import Footer from '@/components/homePageComponents/footer.vue'
 
 const router = useRouter()
+const toast = useToast()
 
 const payments = ref([])
 const isLoading = ref(true)
@@ -13,6 +15,8 @@ const error = ref(null)
 const statusFilter = ref('')
 const selectedPayment = ref(null)
 const showReceiptModal = ref(false)
+// Tracks which payment row is currently being verified against PayPal.
+const verifyingId = ref(null)
 
 const filteredPayments = computed(() =>
   statusFilter.value
@@ -53,6 +57,26 @@ const formatMoney = (n, ccy = 'USD') =>
 const viewReceipt = (payment) => {
   selectedPayment.value = payment
   showReceiptModal.value = true
+}
+
+/**
+ * Re-sync a payment row against PayPal. Useful when capture failed
+ * mid-flight — the buyer may have actually paid and the backend just
+ * couldn't confirm.
+ */
+async function verifyPayment(payment) {
+  verifyingId.value = payment.id
+  try {
+    const res = await paymentApi.verify(payment.id)
+    const updated = res.data ?? res
+    const idx = payments.value.findIndex((p) => p.id === payment.id)
+    if (idx !== -1) payments.value[idx] = { ...payments.value[idx], ...updated }
+    toast.success(res.message || 'Payment verified.')
+  } catch (err) {
+    toast.error(apiErrorMessage(err, 'Could not verify payment.'))
+  } finally {
+    verifyingId.value = null
+  }
 }
 
 async function load() {
@@ -138,7 +162,17 @@ onMounted(load)
                 <span :class="`text-xs px-2 py-1 rounded-full font-medium capitalize ${getStatusClass(p.status)}`">{{ p.status }}</span>
               </td>
               <td class="px-6 py-4 text-right">
-                <button @click="viewReceipt(p)" class="text-sm text-blue-600 hover:text-blue-700">Receipt</button>
+                <div class="inline-flex items-center gap-3">
+                  <button
+                    v-if="p.status !== 'succeeded' && p.status !== 'completed'"
+                    @click="verifyPayment(p)"
+                    :disabled="verifyingId === p.id"
+                    class="text-sm text-emerald-600 hover:text-emerald-700 disabled:opacity-60"
+                  >
+                    {{ verifyingId === p.id ? 'Verifying…' : 'Verify' }}
+                  </button>
+                  <button @click="viewReceipt(p)" class="text-sm text-blue-600 hover:text-blue-700">Receipt</button>
+                </div>
               </td>
             </tr>
             <tr v-if="!isLoading && filteredPayments.length === 0">

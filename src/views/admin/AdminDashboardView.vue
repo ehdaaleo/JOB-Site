@@ -44,6 +44,11 @@ const adminLinks = [
     description: 'Add and edit job categories',
     to: '/admin/categories',
   },
+  {
+    label: 'Transactions',
+    description: 'Payments, revenue, and capture failures',
+    to: '/admin/transactions',
+  },
 ]
 
 const formatDate = (iso) => (iso ? new Date(iso).toLocaleDateString() : '')
@@ -191,7 +196,7 @@ onMounted(async () => {
         </div>
       </div>
 
-      <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <RouterLink
           v-for="link in adminLinks"
           :key="link.to"

@@ -209,6 +209,12 @@ const router = createRouter({
           component: () =>
             import('../views/admin/CategoryManagementView.vue'),
         },
+        {
+          path: 'transactions',
+          name: 'admin-transactions',
+          component: () =>
+            import('../views/admin/AdminTransactionsView.vue'),
+        },
       ],
     },
 

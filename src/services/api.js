@@ -219,6 +219,7 @@ export const candidateApi = {
 
 export const adminApi = {
   dashboard: () => http.get('/admin/dashboard').then((r) => r.data),
+  transactions: () => http.get('/admin/transactions').then((r) => r.data),
   users: (params = {}) =>
     http.get('/admin/users', { params }).then((r) => r.data),
   deleteUser: (id) => http.delete(`/admin/users/${id}`).then((r) => r.data),
